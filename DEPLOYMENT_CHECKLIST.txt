@@ -1,0 +1,160 @@
+================================================================================
+                      DEPLOYMENT CHECKLIST
+================================================================================
+
+Use this checklist when deploying to a new system:
+
+PRE-DEPLOYMENT:
+---------------
+[ ] Verify Python 3.8+ is installed on target system
+    Command: python --version (Windows) or python3 --version (Linux/Mac)
+
+[ ] Ensure you have copied the ENTIRE folder to the target system
+    - All files and subdirectories
+    - Especially db.sqlite3 (contains all data)
+
+[ ] Check available disk space (minimum 500MB)
+
+[ ] Note your network IP address if allowing network access
+    Windows: ipconfig
+    Linux/Mac: ip addr or ifconfig
+
+
+FIRST-TIME SETUP ON NEW SYSTEM:
+--------------------------------
+[ ] Navigate to the Portable-Dashboard-Deploy folder
+
+[ ] Run the setup script:
+    Windows: Double-click setup.bat OR run: python setup.py
+    Linux/Mac: Run: bash setup.sh OR run: python3 setup.py
+
+[ ] Setup script should complete these tasks:
+    [ ] Check Python version
+    [ ] Offer to create virtual environment (recommended: YES)
+    [ ] Install all dependencies from requirements.txt
+    [ ] Check/create database
+    [ ] Offer to create admin user (recommended: YES if new database)
+
+[ ] Verify setup completed without errors
+
+
+STARTING THE DASHBOARD:
+-----------------------
+[ ] Run the startup script:
+    Windows: Double-click start_dashboard.bat OR run: python start_dashboard.py
+    Linux/Mac: Run: bash start_dashboard.sh OR run: python3 start_dashboard.py
+
+[ ] When prompted for IP address:
+    - For local access only: Enter 127.0.0.1 or localhost
+    - For network access: Enter 0.0.0.0 (recommended)
+    - Or press ENTER for default (0.0.0.0)
+
+[ ] When prompted for port:
+    - Enter desired port (e.g., 8000, 8080, 3000)
+    - Or press ENTER for default (8000)
+    - Note: Choose different port if default is in use
+
+[ ] Verify server starts without errors
+
+
+POST-STARTUP VERIFICATION:
+--------------------------
+[ ] Open web browser
+
+[ ] Navigate to the dashboard URL:
+    Local: http://127.0.0.1:PORT
+    Network: http://YOUR_IP:PORT
+
+[ ] Verify dashboard loads correctly
+
+[ ] Test login functionality
+
+[ ] Check that data is present (if migrating existing database)
+
+[ ] Verify all features work as expected:
+    [ ] Dashboard home page
+    [ ] Project listings
+    [ ] Resource management
+    [ ] KPI tracking
+    [ ] AI chat assistant (if configured)
+
+
+NETWORK ACCESS (if needed):
+---------------------------
+[ ] Confirm firewall allows traffic on chosen port
+
+[ ] Share the network URL with users:
+    Format: http://YOUR_IP:PORT
+    Example: http://192.168.1.100:8000
+
+[ ] Test access from another device on the network
+
+[ ] Ensure network stability for continuous operation
+
+
+TROUBLESHOOTING CHECKLIST:
+--------------------------
+If setup fails:
+[ ] Check Python version is 3.8 or higher
+[ ] Verify internet connection (needed for downloading packages)
+[ ] Try manual installation: pip install -r requirements.txt
+[ ] Check for permission issues (especially on Linux/Mac)
+[ ] Review error messages in terminal/console
+
+If startup fails:
+[ ] Check if port is already in use (choose different port)
+[ ] Verify database file exists (db.sqlite3)
+[ ] Check file permissions
+[ ] Try running with verbose output: python manage.py runserver
+
+If dashboard doesn't load:
+[ ] Verify correct URL (check IP and port)
+[ ] Check firewall settings
+[ ] Try accessing from local machine first (http://127.0.0.1:PORT)
+[ ] Check browser console for errors
+[ ] Verify server is still running
+
+
+PRODUCTION CONSIDERATIONS:
+--------------------------
+For production deployments, consider:
+[ ] Generate new SECRET_KEY in settings.py
+[ ] Set DEBUG = False in settings.py
+[ ] Configure proper ALLOWED_HOSTS
+[ ] Set up HTTPS/SSL
+[ ] Use a production-grade server (gunicorn, uwsgi)
+[ ] Set up proper backup system for database
+[ ] Configure logging
+[ ] Set up monitoring
+
+
+BACKUP RECOMMENDATIONS:
+-----------------------
+[ ] Create backup of db.sqlite3 before making changes
+[ ] Store backups in a secure location
+[ ] Test backup restoration procedure
+[ ] Schedule regular automated backups
+[ ] Document backup/restore process
+
+
+MAINTENANCE CHECKLIST:
+----------------------
+[ ] Keep Python and dependencies updated
+[ ] Monitor disk space (database grows over time)
+[ ] Review logs for errors or issues
+[ ] Test backup and restore procedures periodically
+[ ] Document any customizations or changes
+
+
+================================================================================
+                           DEPLOYMENT COMPLETE!
+================================================================================
+
+Once all items are checked, your dashboard is ready for use!
+
+For ongoing support and troubleshooting, refer to:
+- README.md for detailed documentation
+- QUICK_START.txt for quick reference
+- Django documentation: https://docs.djangoproject.com/
+
+================================================================================

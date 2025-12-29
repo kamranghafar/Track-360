@@ -1,0 +1,75 @@
+================================================================================
+                         PORTABLE DASHBOARD INFO
+================================================================================
+
+VERSION: Portable Deployment Package
+DATE: December 2025
+
+WHAT IS THIS?
+-------------
+This is a complete, portable deployment of the Dashboard project. Everything
+you need is in this folder - just copy it to any computer and run!
+
+
+QUICK START FILES (Double-click these):
+----------------------------------------
+  setup.bat             - First-time setup (Windows)
+  start_dashboard.bat   - Start the dashboard (Windows)
+
+  setup.sh              - First-time setup (Linux/Mac)
+  start_dashboard.sh    - Start the dashboard (Linux/Mac)
+
+
+DOCUMENTATION:
+--------------
+  QUICK_START.txt   - Quick reference guide
+  README.md         - Detailed documentation
+
+
+WHAT'S INCLUDED:
+----------------
+  ✓ Complete Django dashboard application
+  ✓ SQLite database with all data
+  ✓ AI-powered chat assistant
+  ✓ Project management tools
+  ✓ Resource planning features
+  ✓ KPI tracking system
+  ✓ Automation metrics
+  ✓ Weekly meeting management
+  ✓ Documentation system
+
+
+SYSTEM REQUIREMENTS:
+--------------------
+  • Python 3.8 or higher
+  • Windows, Linux, or macOS
+  • 2GB RAM minimum (4GB+ recommended)
+  • 500MB free disk space
+  • Internet connection (for initial setup only)
+
+
+DEPLOYMENT INSTRUCTIONS:
+------------------------
+1. Copy this entire folder to your target system
+2. Make sure Python is installed
+3. Run the setup script (setup.bat or setup.sh)
+4. Run the startup script (start_dashboard.bat or start_dashboard.sh)
+5. Access dashboard at http://127.0.0.1:8000
+
+
+IMPORTANT FILES TO KEEP:
+------------------------
+  db.sqlite3        - Contains ALL your data (Don't delete!)
+  requirements.txt  - Required Python packages
+  dashboard/        - Main application code
+  ai_agent/         - AI assistant features
+
+
+SUPPORT:
+--------
+For help, see README.md or refer to Django documentation.
+
+
+================================================================================
+              Copy this folder anywhere - it's completely portable!
+================================================================================

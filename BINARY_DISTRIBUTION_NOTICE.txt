@@ -1,0 +1,147 @@
+================================================================================
+                      BINARY DISTRIBUTION NOTICE
+================================================================================
+
+IMPORTANT INFORMATION ABOUT THIS PACKAGE
+-----------------------------------------
+
+This is a BINARY/COMPILED distribution of the Dashboard application.
+
+WHAT THIS MEANS:
+----------------
+✓ Application runs normally with full functionality
+✓ Source code (.py files) has been compiled to bytecode (.pyc files)
+✓ Source code is NOT included and NOT visible
+✓ Application logic is protected from casual inspection
+✓ You CANNOT edit or modify the application code
+✓ This is a PLUG-AND-PLAY package - just run it!
+
+
+WHAT IS INCLUDED:
+-----------------
+✓ Compiled Python bytecode (.pyc files) - Application logic
+✓ Database (db.sqlite3) - All your data
+✓ Templates (HTML files) - User interface layouts
+✓ Static files (CSS, JS, images) - Styling and assets
+✓ Configuration files - Settings and requirements
+✓ Startup scripts - Easy launch scripts
+✓ Documentation - User guides and instructions
+
+
+WHAT IS NOT INCLUDED:
+---------------------
+✗ Python source code (.py files) - Removed for IP protection
+✗ Application logic source - Compiled to bytecode
+✗ Internal implementation details - Protected
+
+
+WHY BINARY DISTRIBUTION?
+-------------------------
+1. INTELLECTUAL PROPERTY PROTECTION
+   - Protects proprietary business logic
+   - Prevents unauthorized code modifications
+   - Maintains code confidentiality
+
+2. PLUG-AND-PLAY SIMPLICITY
+   - Users don't need to understand code
+   - Reduced complexity for end users
+   - Focus on functionality, not implementation
+
+3. SECURITY
+   - Prevents tampering with application logic
+   - Reduces risk of unauthorized modifications
+   - Protects sensitive algorithms and processes
+
+
+HOW IT WORKS:
+-------------
+Python can execute compiled bytecode (.pyc files) directly without source code.
+
+When you run the startup script:
+1. Python loads the compiled bytecode files
+2. Executes them just like regular Python code
+3. Dashboard runs normally with full functionality
+4. No difference in performance or features
+
+
+CAN YOU DECOMPILE IT?
+----------------------
+Technically, Python bytecode CAN be decompiled back to approximate source code.
+However:
+- Decompilation is legally questionable and may violate licensing terms
+- Decompiled code loses comments, formatting, and some structure
+- This distribution provides basic protection for standard use cases
+
+For enterprise-level code protection (encryption, obfuscation, etc.), contact
+the vendor for professional solutions.
+
+
+WHAT YOU CAN DO:
+----------------
+✓ Run the application normally
+✓ Use all features and functionality
+✓ Access and modify the database (your data)
+✓ Customize templates (HTML appearance)
+✓ Customize static files (CSS, JavaScript, images)
+✓ Deploy to multiple systems
+✓ Back up and restore your data
+
+
+WHAT YOU CANNOT DO:
+-------------------
+✗ View or edit the application logic (compiled bytecode)
+✗ Modify business rules or workflows (protected code)
+✗ Access internal implementation details
+✗ Reverse engineer the application (may violate license)
+✗ Redistribute the compiled code (check license terms)
+
+
+LICENSING:
+----------
+This binary distribution is provided AS-IS. Review the license agreement for:
+- Usage rights and restrictions
+- Redistribution terms
+- Warranty disclaimers
+- Support terms
+
+Unauthorized decompilation, reverse engineering, or redistribution may violate
+intellectual property laws and license agreements.
+
+
+TECHNICAL DETAILS:
+------------------
+Format: Python Bytecode (.pyc)
+Python Version: 3.8+
+Distribution Type: Compiled Binary
+Source Code: Not Included
+Editability: Configuration Only
+Protection Level: Standard Bytecode Compilation
+
+
+SUPPORT:
+--------
+If you need to:
+- Customize application functionality
+- Modify business logic
+- Add new features
+- Request source code access
+
+Contact the vendor or original developer for:
+- Custom development services
+- Source code licensing
+- Enterprise support
+- Feature requests
+
+
+SUMMARY:
+--------
+This is a complete, functional application distributed in compiled form.
+You get all the functionality without the source code.
+
+Just run it and use it - no programming knowledge required!
+
+
+================================================================================
+                    PROTECTED BINARY DISTRIBUTION
+            Application Functionality Without Source Code Exposure
+================================================================================
