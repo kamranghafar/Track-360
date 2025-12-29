@@ -2,8 +2,6 @@
 
 This is a portable, ready-to-deploy **binary version** of the Dashboard project. Everything you need is contained in this folder, including the database.
 
-**IMPORTANT**: This is a compiled binary distribution. Source code is not included or editable. The application runs using Python bytecode for security and intellectual property protection.
-
 ## Quick Start
 
 ### Windows Users
@@ -183,3 +181,4 @@ This dashboard includes:
 ---
 
 **Happy Dashboard Management!**
+
