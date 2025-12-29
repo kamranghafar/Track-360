@@ -1,5 +1,7 @@
 # Portable Dashboard Deployment - Binary Distribution
 
+Python version must be 3.13
+
 This is a portable, ready-to-deploy **binary version** of the Dashboard project. Everything you need is contained in this folder, including the database.
 
 ## Quick Start
@@ -181,4 +183,5 @@ This dashboard includes:
 ---
 
 **Happy Dashboard Management!**
+
 
