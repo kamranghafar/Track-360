@@ -2,7 +2,7 @@
 
 This is a portable, ready-to-deploy **protected version** of the Dashboard project with **compile-on-install** for cross-version compatibility. Everything you need is contained in this folder, including the database.
 
-**IMPORTANT**: This distribution includes source code that is automatically compiled during setup for YOUR specific Python version. After setup, you can optionally remove the source files for intellectual property protection.
+**IMPORTANT**: This distribution includes source code that is automatically compiled during setup for YOUR specific Python version.
 
 ## Quick Start
 
@@ -188,3 +188,4 @@ This dashboard includes:
 ---
 
 **Happy Dashboard Management!**
+
