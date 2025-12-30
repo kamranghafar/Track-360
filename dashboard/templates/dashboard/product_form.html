@@ -1,0 +1,307 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}
+    {% if form.instance.id %}Edit Product: {{ form.instance.name }}{% else %}Add New Product{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{% if form.instance.id %}Edit Product: {{ form.instance.name }}{% else %}Add New Product{% endif %}</h1>
+        <a href="{% url 'product-list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">Product Name</label>
+                    {{ form.name.errors }}
+                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
+                           class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                           value="{{ form.name.value|default:'' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                    {{ form.description.errors }}
+                    <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" 
+                              class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                              rows="4">{{ form.description.value|default:'' }}</textarea>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                            {{ form.status.errors }}
+                            <select name="{{ form.status.name }}" id="{{ form.status.id_for_label }}" 
+                                    class="form-select {% if form.status.errors %}is-invalid{% endif %}">
+                                {% for value, text in form.fields.status.choices %}
+                                <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Automation related fields -->
+                <h4 class="mt-4 mb-3">Automation Details</h4>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.smoke_automation_status.id_for_label }}" class="form-label">Smoke Automation Status</label>
+                            {{ form.smoke_automation_status.errors }}
+                            <select name="{{ form.smoke_automation_status.name }}" id="{{ form.smoke_automation_status.id_for_label }}" 
+                                    class="form-select {% if form.smoke_automation_status.errors %}is-invalid{% endif %}">
+                                {% for value, text in form.fields.smoke_automation_status.choices %}
+                                <option value="{{ value }}" {% if form.smoke_automation_status.value == value %}selected{% endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.regression_automation_status.id_for_label }}" class="form-label">Regression Automation Status</label>
+                            {{ form.regression_automation_status.errors }}
+                            <select name="{{ form.regression_automation_status.name }}" id="{{ form.regression_automation_status.id_for_label }}" 
+                                    class="form-select {% if form.regression_automation_status.errors %}is-invalid{% endif %}">
+                                {% for value, text in form.fields.regression_automation_status.choices %}
+                                <option value="{{ value }}" {% if form.regression_automation_status.value == value %}selected{% endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.pipeline_schedule.id_for_label }}" class="form-label">Pipeline Schedule</label>
+                            {{ form.pipeline_schedule.errors }}
+                            <select name="{{ form.pipeline_schedule.name }}" id="{{ form.pipeline_schedule.id_for_label }}" 
+                                    class="form-select {% if form.pipeline_schedule.errors %}is-invalid{% endif %}">
+                                {% for value, text in form.fields.pipeline_schedule.choices %}
+                                <option value="{{ value }}" {% if form.pipeline_schedule.value == value %}selected{% endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.execution_time_of_smoke.id_for_label }}" class="form-label">Execution Time of Smoke</label>
+                            {{ form.execution_time_of_smoke.errors }}
+                            <input type="text" name="{{ form.execution_time_of_smoke.name }}" id="{{ form.execution_time_of_smoke.id_for_label }}" 
+                                   class="form-control {% if form.execution_time_of_smoke.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.execution_time_of_smoke.value|default:'' }}" placeholder="e.g., 1h 30m">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.team_lead.id_for_label }}" class="form-label">Team Lead</label>
+                            {{ form.team_lead.errors }}
+                            {{ form.team_lead }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Regression Coverage</label>
+                            <div class="form-control bg-light">
+                                {% if form.instance.id %}
+                                    {{ form.instance.regression_coverage|default:"0" }}%
+                                {% else %}
+                                    <em>Will be calculated automatically</em>
+                                {% endif %}
+                            </div>
+                            <small class="form-text text-muted">This value is calculated automatically based on Total Automatable Test Cases and Total Automated Test Cases.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Smoke Coverage</label>
+                            <div class="form-control bg-light">
+                                {% if form.instance.id %}
+                                    {{ form.instance.smoke_coverage|default:"0" }}%
+                                {% else %}
+                                    <em>Will be calculated automatically</em>
+                                {% endif %}
+                            </div>
+                            <small class="form-text text-muted">This value is calculated automatically based on Total Automatable Smoke Test Cases and Total Automated Smoke Test Cases.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.total_number_of_available_test_cases.id_for_label }}" class="form-label">Total Available Test Cases</label>
+                            {{ form.total_number_of_available_test_cases.errors }}
+                            <input type="number" name="{{ form.total_number_of_available_test_cases.name }}" id="{{ form.total_number_of_available_test_cases.id_for_label }}" 
+                                   class="form-control {% if form.total_number_of_available_test_cases.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.total_number_of_available_test_cases.value|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.bugs_found_through_automation.id_for_label }}" class="form-label">Bugs Found Through Automation</label>
+                            {{ form.bugs_found_through_automation.errors }}
+                            <input type="number" name="{{ form.bugs_found_through_automation.name }}" id="{{ form.bugs_found_through_automation.id_for_label }}" 
+                                   class="form-control {% if form.bugs_found_through_automation.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.bugs_found_through_automation.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.status_of_last_automation_run.id_for_label }}" class="form-label">Status of Last Automation Run</label>
+                            {{ form.status_of_last_automation_run.errors }}
+                            <textarea name="{{ form.status_of_last_automation_run.name }}" id="{{ form.status_of_last_automation_run.id_for_label }}" 
+                                      class="form-control {% if form.status_of_last_automation_run.errors %}is-invalid{% endif %}" 
+                                      rows="2">{{ form.status_of_last_automation_run.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.date_of_last_automation_run.id_for_label }}" class="form-label">Date of Last Automation Run</label>
+                            {{ form.date_of_last_automation_run.errors }}
+                            <input type="date" name="{{ form.date_of_last_automation_run.name }}" id="{{ form.date_of_last_automation_run.id_for_label }}" 
+                                   class="form-control {% if form.date_of_last_automation_run.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.date_of_last_automation_run.value|date:'Y-m-d'|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.automation_framework_tech_stack.id_for_label }}" class="form-label">Automation Framework Tech Stack</label>
+                    {{ form.automation_framework_tech_stack.errors }}
+                    <textarea name="{{ form.automation_framework_tech_stack.name }}" id="{{ form.automation_framework_tech_stack.id_for_label }}" 
+                              class="form-control {% if form.automation_framework_tech_stack.errors %}is-invalid{% endif %}" 
+                              rows="2">{{ form.automation_framework_tech_stack.value|default:'' }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.total_automatable_test_cases.id_for_label }}" class="form-label">Total Automatable Test Cases</label>
+                            {{ form.total_automatable_test_cases.errors }}
+                            <input type="number" name="{{ form.total_automatable_test_cases.name }}" id="{{ form.total_automatable_test_cases.id_for_label }}" 
+                                   class="form-control {% if form.total_automatable_test_cases.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.total_automatable_test_cases.value|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.total_automatable_smoke_test_cases.id_for_label }}" class="form-label">Total Automatable Smoke Test Cases</label>
+                            {{ form.total_automatable_smoke_test_cases.errors }}
+                            <input type="number" name="{{ form.total_automatable_smoke_test_cases.name }}" id="{{ form.total_automatable_smoke_test_cases.id_for_label }}" 
+                                   class="form-control {% if form.total_automatable_smoke_test_cases.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.total_automatable_smoke_test_cases.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.total_automated_test_cases.id_for_label }}" class="form-label">Total Automated Test Cases</label>
+                            {{ form.total_automated_test_cases.errors }}
+                            <input type="number" name="{{ form.total_automated_test_cases.name }}" id="{{ form.total_automated_test_cases.id_for_label }}" 
+                                   class="form-control {% if form.total_automated_test_cases.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.total_automated_test_cases.value|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.total_automated_smoke_test_cases.id_for_label }}" class="form-label">Total Automated Smoke Test Cases</label>
+                            {{ form.total_automated_smoke_test_cases.errors }}
+                            <input type="number" name="{{ form.total_automated_smoke_test_cases.name }}" id="{{ form.total_automated_smoke_test_cases.id_for_label }}" 
+                                   class="form-control {% if form.total_automated_smoke_test_cases.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.total_automated_smoke_test_cases.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.sprint_cycle.id_for_label }}" class="form-label">Sprint Cycle</label>
+                            {{ form.sprint_cycle.errors }}
+                            <input type="text" name="{{ form.sprint_cycle.name }}" id="{{ form.sprint_cycle.id_for_label }}" 
+                                   class="form-control {% if form.sprint_cycle.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.sprint_cycle.value|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.oat_release_cycle.id_for_label }}" class="form-label">OAT Release Cycle</label>
+                            {{ form.oat_release_cycle.errors }}
+                            <input type="text" name="{{ form.oat_release_cycle.name }}" id="{{ form.oat_release_cycle.id_for_label }}" 
+                                   class="form-control {% if form.oat_release_cycle.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.oat_release_cycle.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.total_number_of_functional_test_cases.id_for_label }}" class="form-label">Total Functional Test Cases</label>
+                            {{ form.total_number_of_functional_test_cases.errors }}
+                            <input type="number" name="{{ form.total_number_of_functional_test_cases.name }}" id="{{ form.total_number_of_functional_test_cases.id_for_label }}" 
+                                   class="form-control {% if form.total_number_of_functional_test_cases.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.total_number_of_functional_test_cases.value|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.total_number_of_business_test_cases.id_for_label }}" class="form-label">Total Business Test Cases</label>
+                            {{ form.total_number_of_business_test_cases.errors }}
+                            <input type="number" name="{{ form.total_number_of_business_test_cases.name }}" id="{{ form.total_number_of_business_test_cases.id_for_label }}" 
+                                   class="form-control {% if form.total_number_of_business_test_cases.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.total_number_of_business_test_cases.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3 form-check">
+                    {{ form.in_production.errors }}
+                    <input type="checkbox" name="{{ form.in_production.name }}" id="{{ form.in_production.id_for_label }}" 
+                           class="form-check-input {% if form.in_production.errors %}is-invalid{% endif %}" 
+                           {% if form.in_production.value %}checked{% endif %}>
+                    <label for="{{ form.in_production.id_for_label }}" class="form-check-label">In Production</label>
+                </div>
+
+                <div class="mb-3 form-check">
+                    {{ form.in_development.errors }}
+                    <input type="checkbox" name="{{ form.in_development.name }}" id="{{ form.in_development.id_for_label }}" 
+                           class="form-check-input {% if form.in_development.errors %}is-invalid{% endif %}" 
+                           {% if form.in_development.value %}checked{% endif %}>
+                    <label for="{{ form.in_development.id_for_label }}" class="form-check-label">In Development</label>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if form.instance.id %}Update{% else %}Create{% endif %} Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,8 +1,8 @@
-# Portable Dashboard Deployment - Binary Distribution
+# Portable Dashboard Deployment - Protected Distribution v2.0
 
-Python version must be 3.13
+This is a portable, ready-to-deploy **protected version** of the Dashboard project with **compile-on-install** for cross-version compatibility. Everything you need is contained in this folder, including the database.
 
-This is a portable, ready-to-deploy **binary version** of the Dashboard project. Everything you need is contained in this folder, including the database.
+**IMPORTANT**: This distribution includes source code that is automatically compiled during setup for YOUR specific Python version. After setup, you can optionally remove the source files for intellectual property protection.
 
 ## Quick Start
 
@@ -144,15 +144,20 @@ If you use a virtual environment:
 - **Windows**: It's automatically activated by the `.bat` scripts
 - **Linux/Mac**: It's automatically activated by the `.sh` scripts
 
-## Binary Distribution Notice
+## Cross-Version Compatible Protection
 
-This package contains **compiled Python bytecode** (.pyc files) instead of source code (.py files):
-- Application logic is protected and not directly visible
-- Source code cannot be edited or modified
-- The application runs normally using Python's bytecode execution
-- All functionality is preserved
+This package uses a **compile-on-install** approach:
+- Source code is included in the distribution
+- During setup, code is compiled for YOUR specific Python version
+- After compilation, you can OPTIONALLY remove source files for protection
+- Works with ANY Python 3.8+ version (3.8, 3.9, 3.10, 3.11, 3.12, 3.13, 3.14+)
+- No "bad magic number" errors across Python versions!
 
-**Note**: Python bytecode provides basic code protection. For enterprise-level security, contact the vendor for additional protection options.
+**Setup will ask**: "Remove source files? (yes/no)"
+- YES = Source code removed after compilation (protected distribution)
+- NO = Source code kept (easier debugging, still fully functional)
+
+**Note**: Python bytecode provides basic code protection. For enterprise-level security, consider PyInstaller, Nuitka, or PyArmor.
 
 ## Security Notes
 
@@ -183,5 +188,3 @@ This dashboard includes:
 ---
 
 **Happy Dashboard Management!**
-
-

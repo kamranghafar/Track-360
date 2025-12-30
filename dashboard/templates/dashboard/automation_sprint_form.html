@@ -1,0 +1,162 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Automation Sprint{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header">
+                    <h5>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Automation Sprint</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.product.id_for_label }}" class="form-label">Product</label>
+                                {{ form.product.errors }}
+                                {{ form.product }}
+                                <div class="form-text">Select the product for this sprint</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.engineering_manager_name.id_for_label }}" class="form-label">Engineering Manager Name</label>
+                                {{ form.engineering_manager_name.errors }}
+                                {{ form.engineering_manager_name }}
+                                <div class="form-text">Enter the name of the engineering manager</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.sprint_length.id_for_label }}" class="form-label">Sprint Length</label>
+                                {{ form.sprint_length.errors }}
+                                {{ form.sprint_length }}
+                                <div class="form-text">Select the length of the sprint</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.total_dev_resources.id_for_label }}" class="form-label">Total Dev Resources</label>
+                                {{ form.total_dev_resources.errors }}
+                                {{ form.total_dev_resources }}
+                                <div class="form-text">Enter the number of development resources</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.sprint_type.id_for_label }}" class="form-label">Sprint Type</label>
+                                {{ form.sprint_type.errors }}
+                                {{ form.sprint_type }}
+                                <div class="form-text">Select the type of sprint</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date</label>
+                                {{ form.start_date.errors }}
+                                {{ form.start_date }}
+                                <div class="form-text">Select the start date of the sprint</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                                {{ form.status.errors }}
+                                {{ form.status }}
+                                <div class="form-text">Select the current status of the sprint</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.qa_point_of_contact.id_for_label }}" class="form-label">QA Point of Contact</label>
+                                {{ form.qa_point_of_contact.errors }}
+                                {{ form.qa_point_of_contact }}
+                                <div class="form-text">Select the QA point of contact</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="{{ form.rationale.id_for_label }}" class="form-label">Rationale</label>
+                                {{ form.rationale.errors }}
+                                {{ form.rationale }}
+                                <div class="form-text">Provide the rationale for this sprint</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="{{ form.risks.id_for_label }}" class="form-label">Risks</label>
+                                {{ form.risks.errors }}
+                                {{ form.risks }}
+                                <div class="form-text">Identify any risks associated with this sprint</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.dev_training_status.id_for_label }}" class="form-label">Dev Training Status</label>
+                                {{ form.dev_training_status.errors }}
+                                {{ form.dev_training_status }}
+                                <div class="form-text">Select the current status of developer training</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                {{ form.notes.errors }}
+                                {{ form.notes }}
+                                <div class="form-text">Add any additional notes about the sprint</div>
+                            </div>
+                        </div>
+
+                        {% if form.instance.pk %}
+                        <!-- Only show Sprint Metrics when editing an existing sprint -->
+                        <h5 class="mt-4 mb-3">Sprint Metrics</h5>
+
+                        <div class="alert alert-info">
+                            <p><strong>Note:</strong> All metrics fields are optional. You can update these metrics at any time.</p>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.total_sprint_days.id_for_label }}" class="form-label">Total Sprint Days</label>
+                                {{ form.total_sprint_days.errors }}
+                                {{ form.total_sprint_days }}
+                                <div class="form-text">Enter the total number of days in the sprint</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.total_planned_working_hours.id_for_label }}" class="form-label">Total Planned Working Hours</label>
+                                {{ form.total_planned_working_hours.errors }}
+                                {{ form.total_planned_working_hours }}
+                                <div class="form-text">Enter the total planned working hours</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.blocked_hours.id_for_label }}" class="form-label">Blocked Hours</label>
+                                {{ form.blocked_hours.errors }}
+                                {{ form.blocked_hours }}
+                                <div class="form-text">Enter the number of blocked hours</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.total_planned_test_cases.id_for_label }}" class="form-label">Total Planned Test Cases</label>
+                                {{ form.total_planned_test_cases.errors }}
+                                {{ form.total_planned_test_cases }}
+                                <div class="form-text">Enter the total number of planned test cases</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.total_test_cases_automated.id_for_label }}" class="form-label">Total Test Cases Automated</label>
+                                {{ form.total_test_cases_automated.errors }}
+                                {{ form.total_test_cases_automated }}
+                                <div class="form-text">Enter the total number of test cases automated</div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'automation-sprint-list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

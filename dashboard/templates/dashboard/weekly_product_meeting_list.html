@@ -1,0 +1,227 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Manual Updates{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Improved tab styling */
+    .nav-tabs .nav-link {
+        transition: all 0.3s ease;
+        border-radius: 0.25rem 0.25rem 0 0;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link:not(.active):hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        border-color: transparent;
+    }
+
+    .tab-content .tab-pane {
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .tab-content .tab-pane.fade:not(.show) {
+        display: block;
+        opacity: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
+    /* Highlight active tab more prominently */
+    .nav-tabs .nav-link.active {
+        border-top: 3px solid #0d6efd;
+        font-weight: 600;
+    }
+
+    /* Add loading indicator for page transitions */
+    .nav-tabs .nav-link[href]:not([href="#"]):before {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: #0d6efd;
+        transition: width 0.3s ease;
+    }
+
+    .nav-tabs .nav-link[href]:not([href="#"]):active:before {
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Manual Updates</h1>
+        <a href="{% url 'weekly-product-meeting-create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Update
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <ul class="nav nav-tabs" id="meetingTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="true">
+                        <i class="fas fa-clipboard-list me-1"></i> Active Updates
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+                        <i class="fas fa-history me-1"></i> Updates History
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="{% url 'latest-product-updates' %}" id="updates-tab" role="tab">
+                        <i class="fas fa-box-open me-1"></i> Latest Product Updates
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="meetingTabsContent">
+                <div class="tab-pane fade show active" id="active" role="tabpanel" aria-labelledby="active-tab">
+                    <div class="table-responsive mt-3">
+                        <table class="table table-striped product-updates-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-calendar-day me-2"></i>Date</th>
+                                    <th><i class="fas fa-heading me-2"></i>Title</th>
+                                    <th><i class="fas fa-box-open me-2"></i>Products</th>
+                                    <th><i class="fas fa-info-circle me-2"></i>Status</th>
+                                    <th><i class="fas fa-cogs me-2"></i>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for meeting in meetings %}
+                                {% if not meeting.is_completed %}
+                                <tr>
+                                    <td>{{ meeting.meeting_date|date:"M d, Y H:i" }}</td>
+                                    <td>{{ meeting.title }}</td>
+                                    <td>{{ meeting.product_count }}</td>
+                                    <td>
+                                        <span class="badge bg-warning">Pending</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'weekly-product-meeting-detail' meeting.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'weekly-product-meeting-update' meeting.id %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'weekly-product-meeting-delete' meeting.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No active updates available.</td>
+                                </tr>
+                                {% endfor %}
+                                {% if not has_active_meetings %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No active updates available.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                    <div class="table-responsive mt-3">
+                        <table class="table table-striped product-updates-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-calendar-day me-2"></i>Date</th>
+                                    <th><i class="fas fa-heading me-2"></i>Title</th>
+                                    <th><i class="fas fa-box-open me-2"></i>Products</th>
+                                    <th><i class="fas fa-info-circle me-2"></i>Status</th>
+                                    <th><i class="fas fa-cogs me-2"></i>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for meeting in meetings %}
+                                {% if meeting.is_completed %}
+                                <tr>
+                                    <td>{{ meeting.meeting_date|date:"M d, Y H:i" }}</td>
+                                    <td>{{ meeting.title }}</td>
+                                    <td>{{ meeting.product_count }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Completed</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'weekly-product-meeting-detail' meeting.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'weekly-product-meeting-update' meeting.id %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'weekly-product-meeting-delete' meeting.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                                {% if not has_completed_meetings %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No completed updates available.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {% include 'dashboard/includes/pagination.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if we have a stored tab or hash in URL
+        const storedTab = localStorage.getItem('manualUpdatesActiveTab');
+        const hash = window.location.hash.substring(1);
+
+        // Determine which tab to activate
+        let tabToActivate = 'active'; // Default tab
+
+        if (hash && (hash === 'active' || hash === 'history')) {
+            tabToActivate = hash;
+        } else if (storedTab && (storedTab === 'active' || storedTab === 'history')) {
+            tabToActivate = storedTab;
+        }
+
+        // Activate the tab
+        if (tabToActivate !== 'active') { // Only if not the default tab
+            const tabEl = document.getElementById(tabToActivate + '-tab');
+            const tab = new bootstrap.Tab(tabEl);
+            tab.show();
+        }
+
+        // Store the active tab when clicked
+        const tabs = document.querySelectorAll('#meetingTabs .nav-link');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.id.replace('-tab', '');
+                localStorage.setItem('manualUpdatesActiveTab', tabId);
+            });
+        });
+
+        // Add smooth transition for tab content
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        tabPanes.forEach(pane => {
+            pane.style.transition = 'opacity 0.3s ease-in-out';
+        });
+    });
+</script>
+{% endblock %}

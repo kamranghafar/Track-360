@@ -1,0 +1,219 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}
+    {% if form.instance.id %}Edit Roadmap Item{% else %}New Roadmap Item{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">
+        {% if form.instance.id %}Edit Roadmap Item{% else %}New Roadmap Item{% endif %}
+    </h1>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {% if form.instance.id %}
+                            Edit "{{ form.instance.title }}"
+                        {% else %}
+                            {% if quarter %}
+                                Add New Roadmap Item for {{ quarter }}
+                            {% else %}
+                                Add New Roadmap Item
+                            {% endif %}
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label for="{{ form.title.id_for_label }}">Title</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.title.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.description.id_for_label }}">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="{{ form.owner.id_for_label }}">Owner</label>
+                                {{ form.owner }}
+                                {% if form.owner.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.owner.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label for="{{ form.status.id_for_label }}">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.status.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label for="{{ form.priority.id_for_label }}">Priority</label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.priority.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="{{ form.start_date.id_for_label }}">Start Date</label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.start_date.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group col-md-6">
+                                <label for="{{ form.end_date.id_for_label }}">End Date</label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.end_date.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="{{ form.quarter.id_for_label }}">Quarter</label>
+                                {{ form.quarter }}
+                                {% if form.quarter.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.quarter.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group col-md-6">
+                                <label for="{{ form.project.id_for_label }}">Project (Optional)</label>
+                                {{ form.project }}
+                                {% if form.project.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.project.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.quarter_target.id_for_label }}">Quarter Target (Optional)</label>
+                            {{ form.quarter_target }}
+                            {% if form.quarter_target.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quarter_target.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.progress.id_for_label }}">Progress (0-100%)</label>
+                            {{ form.progress }}
+                            {% if form.progress.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.progress.errors }}
+                                </div>
+                            {% endif %}
+                            <div class="progress mt-2">
+                                <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.id %}Update{% else %}Create{% endif %}
+                            </button>
+                            {% if form.instance.id %}
+                                <a href="{% url 'roadmap-item-detail' pk=form.instance.id %}" class="btn btn-secondary">Cancel</a>
+                            {% else %}
+                                {% if quarter %}
+                                    <a href="{% url 'roadmap-timeline-quarter' quarter_id=quarter.id %}" class="btn btn-secondary">Cancel</a>
+                                {% else %}
+                                    <a href="{% url 'roadmap-item-list' %}" class="btn btn-secondary">Cancel</a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add Bootstrap form classes to form fields and set up progress bar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form-control class to all form inputs
+        var formControls = document.querySelectorAll('input, select, textarea');
+        formControls.forEach(function(element) {
+            element.classList.add('form-control');
+        });
+
+        // Set up progress bar
+        var progressInput = document.getElementById('{{ form.progress.id_for_label }}');
+        var progressBar = document.getElementById('progress-bar');
+
+        // Initialize progress bar with current value
+        if (progressInput && progressBar) {
+            var initialValue = progressInput.value || 0;
+            updateProgressBar(initialValue);
+
+            // Update progress bar when input changes
+            progressInput.addEventListener('input', function() {
+                updateProgressBar(this.value);
+            });
+        }
+
+        function updateProgressBar(value) {
+            // Ensure value is between 0 and 100
+            value = Math.min(Math.max(parseInt(value) || 0, 0), 100);
+
+            // Update progress bar
+            progressBar.style.width = value + '%';
+            progressBar.setAttribute('aria-valuenow', value);
+            progressBar.textContent = value + '%';
+
+            // Change color based on progress
+            if (value < 30) {
+                progressBar.className = 'progress-bar bg-danger';
+            } else if (value < 70) {
+                progressBar.className = 'progress-bar bg-warning';
+            } else {
+                progressBar.className = 'progress-bar bg-success';
+            }
+        }
+    });
+</script>
+{% endblock %}

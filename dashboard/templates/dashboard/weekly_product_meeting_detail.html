@@ -1,0 +1,146 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Meeting: {{ meeting.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Meeting: {{ meeting.title }}</h1>
+        <div>
+            {% if not meeting.is_completed %}
+                {% if meeting_active %}
+                    <form method="post" action="{% url 'end-weekly-product-meeting' meeting.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i> End Meeting
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{% url 'start-weekly-product-meeting' meeting.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="select_products" value="1">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-play-circle"></i> Start Product Meeting
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'weekly-product-meeting-update' meeting.id %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'weekly-product-meeting-delete' meeting.id %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+            <a href="{% url 'weekly-product-meeting-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Meeting Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Date:</th>
+                            <td>{{ meeting.meeting_date|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Title:</th>
+                            <td>{{ meeting.title }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if meeting.is_completed %}
+                                <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Products:</th>
+                            <td>{{ meeting.product_count }}</td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ meeting.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated:</th>
+                            <td>{{ meeting.updated_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Meeting Notes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="meeting-notes">
+                        {{ meeting.notes|default:"No notes provided"|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Product Updates</h5>
+                </div>
+                <div class="card-body">
+                    {% if meeting_active %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Meeting is active. You can update product information.
+                    </div>
+                    {% endif %}
+
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Product Notes</th>
+                                <th>Problems</th>
+                                <th>Solution Timeline</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for update in product_updates %}
+                            <tr>
+                                <td><a href="{% url 'product-detail' update.project.id %}">{{ update.project.name }}</a></td>
+                                <td>{{ update.product_notes|truncatechars:30 }}</td>
+                                <td>{{ update.problems|truncatechars:30 }}</td>
+                                <td>{{ update.get_solution_timeline_display }}</td>
+                                <td>
+                                    {% if meeting_active %}
+                                    <a href="{% url 'weekly-product-update-edit' update.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'weekly-product-update-detail' update.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No product updates available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

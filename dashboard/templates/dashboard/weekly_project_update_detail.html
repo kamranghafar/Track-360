@@ -1,0 +1,321 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Project Update: {{ project_update.project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Project Update: {{ project_update.project.name }}</h1>
+        <div>
+            <a href="{% url 'weekly-meeting-detail' project_update.meeting.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Meeting
+            </a>
+            <a href="{% url 'product-detail' project_update.project.id %}" class="btn btn-info">
+                <i class="fas fa-project-diagram"></i> View Project
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Project:</th>
+                            <td>{{ project_update.project.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Meeting:</th>
+                            <td>{{ project_update.meeting.title }} ({{ project_update.meeting.meeting_date|date:"M d, Y" }})</td>
+                        </tr>
+                        <tr>
+                            <th>Team Lead:</th>
+                            <td>{{ project_update.team_lead.name|default:"Not assigned" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Sprint Cycle:</th>
+                            <td>{{ project_update.sprint_cycle.name|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>OAT Release Cycle:</th>
+                            <td>{{ project_update.oat_release_cycle.name|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Readiness for Production:</th>
+                            <td>
+                                {% if project_update.readiness_for_production %}
+                                <span class="badge bg-success">Ready</span>
+                                {% else %}
+                                <span class="badge bg-warning">Not Ready</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ project_update.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated:</th>
+                            <td>{{ project_update.updated_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Automation Status</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Smoke Automation Status:</th>
+                            <td>
+                                {% if project_update.smoke_automation_status == 'in_progress' %}
+                                <span class="badge bg-primary">In Progress</span>
+                                {% elif project_update.smoke_automation_status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif project_update.smoke_automation_status == 'hold' %}
+                                <span class="badge bg-warning">Hold</span>
+                                {% else %}
+                                <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+
+                                {% if project_update.smoke_automation_status != project_update.project.smoke_automation_status %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-history"></i> Previous: 
+                                    {% if project_update.project.smoke_automation_status == 'in_progress' %}
+                                    <span class="badge bg-primary">In Progress</span>
+                                    {% elif project_update.project.smoke_automation_status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif project_update.project.smoke_automation_status == 'hold' %}
+                                    <span class="badge bg-warning">Hold</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">N/A</span>
+                                    {% endif %}
+                                </small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Regression Automation Status:</th>
+                            <td>
+                                {% if project_update.regression_automation_status == 'in_progress' %}
+                                <span class="badge bg-primary">In Progress</span>
+                                {% elif project_update.regression_automation_status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif project_update.regression_automation_status == 'hold' %}
+                                <span class="badge bg-warning">Hold</span>
+                                {% else %}
+                                <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+
+                                {% if project_update.regression_automation_status != project_update.project.regression_automation_status %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-history"></i> Previous: 
+                                    {% if project_update.project.regression_automation_status == 'in_progress' %}
+                                    <span class="badge bg-primary">In Progress</span>
+                                    {% elif project_update.project.regression_automation_status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif project_update.project.regression_automation_status == 'hold' %}
+                                    <span class="badge bg-warning">Hold</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">N/A</span>
+                                    {% endif %}
+                                </small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Pipeline Schedule:</th>
+                            <td>
+                                {{ project_update.get_pipeline_schedule_display }}
+                                {% if project_update.pipeline_schedule != project_update.project.pipeline_schedule %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-history"></i> Previous: {{ project_update.project.get_pipeline_schedule_display }}
+                                </small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Execution Time:</th>
+                            <td>
+                                {{ project_update.get_execution_time_display }}
+                                {% if project_update.get_execution_time_display != project_update.project.execution_time_of_smoke %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-history"></i> Previous: {{ project_update.project.execution_time_of_smoke|default:"Not specified" }}
+                                </small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Last Automation Run:</th>
+                            <td>
+                                {{ project_update.last_automation_run_date|date:"M d, Y"|default:"Not available" }}
+                                {% if project_update.last_automation_run_date != project_update.project.date_of_last_automation_run %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-history"></i> Previous: {{ project_update.project.date_of_last_automation_run|date:"M d, Y"|default:"Not available" }}
+                                </small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Last Run Status:</th>
+                            <td>
+                                {{ project_update.last_automation_run_status|default:"Not available" }}
+                                {% if project_update.last_automation_run_status != project_update.project.status_of_last_automation_run %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-history"></i> Previous: {{ project_update.project.status_of_last_automation_run|default:"Not available" }}
+                                </small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Framework/Tech Stack:</th>
+                            <td>
+                                {{ project_update.automation_framework_tech_stack|default:"Not specified" }}
+                                {% if project_update.automation_framework_tech_stack != project_update.project.automation_framework_tech_stack %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-history"></i> Previous: {{ project_update.project.automation_framework_tech_stack|default:"Not specified" }}
+                                </small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Test Case Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table">
+                                <tr>
+                                    <th>Total Available Test Cases:</th>
+                                    <td>
+                                        {{ project_update.total_available_test_cases }}
+                                        {% if project_update.total_available_test_cases != project_update.project.total_number_of_available_test_cases and project_update.project.total_number_of_available_test_cases is not None %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-history"></i> Previous: {{ project_update.project.total_number_of_available_test_cases }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Total Automatable Test Cases:</th>
+                                    <td>
+                                        {{ project_update.total_automatable_test_cases }}
+                                        {% if project_update.total_automatable_test_cases != project_update.project.total_automatable_test_cases and project_update.project.total_automatable_test_cases is not None %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-history"></i> Previous: {{ project_update.project.total_automatable_test_cases }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Total Automated Test Cases:</th>
+                                    <td>
+                                        {{ project_update.total_automated_test_cases }}
+                                        {% if project_update.total_automated_test_cases != project_update.project.total_automated_test_cases and project_update.project.total_automated_test_cases is not None %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-history"></i> Previous: {{ project_update.project.total_automated_test_cases }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Total Automated Smoke Test Cases:</th>
+                                    <td>
+                                        {{ project_update.total_automated_smoke_test_cases }}
+                                        {% if project_update.total_automated_smoke_test_cases != project_update.project.total_automated_smoke_test_cases and project_update.project.total_automated_smoke_test_cases is not None %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-history"></i> Previous: {{ project_update.project.total_automated_smoke_test_cases }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table">
+                                <tr>
+                                    <th>Functional Test Cases:</th>
+                                    <td>
+                                        {{ project_update.functional_test_cases_count }}
+                                        {% if project_update.functional_test_cases_count != project_update.project.total_number_of_functional_test_cases and project_update.project.total_number_of_functional_test_cases is not None %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-history"></i> Previous: {{ project_update.project.total_number_of_functional_test_cases }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Business Test Cases:</th>
+                                    <td>
+                                        {{ project_update.business_test_cases_count }}
+                                        {% if project_update.business_test_cases_count != project_update.project.total_number_of_business_test_cases and project_update.project.total_number_of_business_test_cases is not None %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-history"></i> Previous: {{ project_update.project.total_number_of_business_test_cases }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Regression Coverage:</th>
+                                    <td>
+                                        {{ project_update.regression_coverage }}%
+                                        {% if project_update.regression_coverage != project_update.project.regression_coverage and project_update.project.regression_coverage is not None %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-history"></i> Previous: {{ project_update.project.regression_coverage }}%
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Bugs Found Through Automation:</th>
+                                    <td>
+                                        {{ project_update.bugs_found_through_automation }}
+                                        {% if project_update.bugs_found_through_automation != project_update.project.bugs_found_through_automation and project_update.project.bugs_found_through_automation is not None %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-history"></i> Previous: {{ project_update.project.bugs_found_through_automation }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

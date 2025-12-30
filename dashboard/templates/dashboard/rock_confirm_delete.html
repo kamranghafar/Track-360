@@ -1,0 +1,53 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Delete Rock: {{ rock.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Delete Rock: {{ rock.title }}</h1>
+        <a href="{% url 'rock-list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Warning!</h4>
+                <p>Are you sure you want to delete the rock "{{ rock.title }}"?</p>
+                <p>This action cannot be undone. All data associated with this rock will be permanently deleted.</p>
+                
+                <hr>
+                <p class="mb-0">Rock Details:</p>
+                <ul>
+                    <li><strong>Assignee:</strong> {{ rock.assignee.name }}</li>
+                    <li><strong>Priority:</strong> {{ rock.get_priority_display }}</li>
+                    <li><strong>Status:</strong> {{ rock.get_status_display }}</li>
+                    {% if rock.project %}
+                    <li><strong>Project:</strong> {{ rock.project.name }}</li>
+                    {% endif %}
+                    {% if rock.quarter_target %}
+                    <li><strong>Quarter Target:</strong> {{ rock.quarter_target }}</li>
+                    {% endif %}
+                    {% if rock.due_date %}
+                    <li><strong>Due Date:</strong> {{ rock.due_date }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'rock-detail' rock.id %}" class="btn btn-secondary me-md-2">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Confirm Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

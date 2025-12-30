@@ -1,0 +1,290 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}1:1 Feedback Details{% endblock %}
+
+{% block head_extras %}
+    {% load static %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
+    <style>
+        .feedback-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        .feedback-header h1 {
+            color: #343a40;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-header p {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        .feedback-card {
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .feedback-card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+            transform: translateY(-3px);
+        }
+
+        .feedback-card .card-header {
+            background-color: #f1f4f9;
+            border-bottom: 1px solid #e0e6ed;
+            padding: 1rem 1.25rem;
+        }
+
+        .feedback-meta {
+            margin-bottom: 1.5rem;
+            padding: 1.25rem;
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .feedback-meta .meta-item {
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .feedback-meta .meta-item strong {
+            min-width: 120px;
+            color: #495057;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .feedback-meta .meta-item strong i {
+            margin-right: 0.5rem;
+            color: #6c757d;
+            width: 16px;
+            text-align: center;
+        }
+
+        .feedback-meta .meta-item a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .feedback-meta .meta-item a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
+        .feedback-content {
+            padding: 0 1.25rem 1.25rem;
+        }
+
+        .feedback-content h5 {
+            color: #343a40;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .feedback-content h5::before {
+            content: '\f075';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            margin-right: 0.75rem;
+            color: #6c757d;
+        }
+
+        .feedback-notes {
+            margin-top: 1rem;
+            padding: 1.5rem;
+            background-color: #f9f9fa;
+            border-radius: 0.5rem;
+            border-left: 4px solid #007bff;
+            white-space: pre-line;
+            line-height: 1.6;
+            color: #212529;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-size: 1.05rem;
+        }
+
+        .action-buttons .btn {
+            margin-left: 0.5rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-buttons .btn i {
+            margin-right: 0.5rem;
+        }
+
+        .action-buttons .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Responsive styles */
+        @media (max-width: 767.98px) {
+            .feedback-header {
+                padding: 1rem;
+            }
+
+            .action-buttons {
+                margin-top: 1rem;
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .action-buttons .btn {
+                flex: 1;
+                margin: 0 0.25rem;
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .action-buttons .btn span {
+                display: none;
+            }
+
+            .action-buttons .btn i {
+                margin-right: 0;
+            }
+
+            .feedback-meta {
+                padding: 1rem;
+            }
+
+            .feedback-meta .meta-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .feedback-meta .meta-item strong {
+                margin-bottom: 0.25rem;
+            }
+
+            .feedback-notes {
+                padding: 1rem;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="feedback-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>1:1 Feedback Details</h1>
+                <p>Viewing feedback for {{ feedback.resource.name }}</p>
+            </div>
+            <div class="action-buttons">
+                <a href="{% url 'one-on-one-feedback-list' %}" class="btn btn-secondary" data-bs-toggle="tooltip" title="Back to list">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+                <a href="{% url 'one-on-one-feedback-update' feedback.id %}" class="btn btn-warning" data-bs-toggle="tooltip" title="Edit this feedback">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{% url 'one-on-one-feedback-delete' feedback.id %}" class="btn btn-danger" data-bs-toggle="tooltip" title="Delete this feedback">
+                    <i class="fas fa-trash"></i> Delete
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card feedback-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Feedback Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="feedback-meta animate__animated animate__fadeIn">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="meta-item">
+                                    <strong><i class="fas fa-user"></i> Resource:</strong> 
+                                    <a href="{% url 'resource-detail' feedback.resource.id %}">
+                                        {{ feedback.resource.name }}
+                                        {% if feedback.resource.role %}
+                                        <span class="badge bg-secondary ms-2">{{ feedback.resource.role }}</span>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                <div class="meta-item">
+                                    <strong><i class="fas fa-user-edit"></i> Created By:</strong> 
+                                    <span class="text-muted">{{ feedback.created_by.username }}</span>
+                                </div>
+                                {% if feedback.resource.email %}
+                                <div class="meta-item">
+                                    <strong><i class="fas fa-envelope"></i> Email:</strong> 
+                                    <a href="mailto:{{ feedback.resource.email }}">{{ feedback.resource.email }}</a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="meta-item">
+                                    <strong><i class="fas fa-calendar-plus"></i> Created At:</strong> 
+                                    <span class="text-muted">{{ feedback.created_at|date:"F d, Y H:i" }}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <strong><i class="fas fa-calendar-check"></i> Last Updated:</strong> 
+                                    <span class="text-muted">{{ feedback.updated_at|date:"F d, Y H:i" }}</span>
+                                </div>
+                                {% if feedback.resource.lead %}
+                                <div class="meta-item">
+                                    <strong><i class="fas fa-user-tie"></i> Lead:</strong> 
+                                    <a href="{% url 'resource-detail' feedback.resource.lead.id %}">{{ feedback.resource.lead.name }}</a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feedback-content animate__animated animate__fadeIn" style="animation-delay: 0.2s;">
+                        <h5>Feedback Notes</h5>
+                        <div class="feedback-notes">
+                            {{ feedback.notes }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

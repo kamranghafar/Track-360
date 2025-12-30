@@ -1,0 +1,51 @@
+{% extends 'dashboard/base.html' %}
+{% load custom_filters %}
+
+{% block title %}
+{% if form.instance.id %}Edit Meeting: {{ form.instance.title }}{% else %}New Product Meeting{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            {% if form.instance.id %}Edit Meeting: {{ form.instance.title }}{% else %}New Product Meeting{% endif %}
+        </h1>
+        <a href="{% url 'weekly-product-meeting-list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="{{ form.meeting_date.id_for_label }}" class="form-label">Meeting Date</label>
+                    {{ form.meeting_date.errors }}
+                    {{ form.meeting_date|add_class:"form-control" }}
+                    <div class="form-text">Format: YYYY-MM-DD HH:MM:SS</div>
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                    {{ form.title.errors }}
+                    {{ form.title|add_class:"form-control" }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Meeting Notes</label>
+                    {{ form.notes.errors }}
+                    {{ form.notes|add_class:"form-control" }}
+                    <div class="form-text">General notes about the meeting</div>
+                </div>
+                <div class="mb-3 form-check">
+                    {{ form.is_completed|add_class:"form-check-input" }}
+                    <label for="{{ form.is_completed.id_for_label }}" class="form-check-label">Completed</label>
+                    {{ form.is_completed.errors }}
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'weekly-product-meeting-list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}User Action Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">User Action Logs</h1>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <!-- User filter -->
+                <div class="col-md-3">
+                    <label for="user_id" class="form-label">User</label>
+                    <select name="user_id" id="user_id" class="form-select">
+                        <option value="">All Users</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}" {% if current_filters.user_id == user.id|slugify %}selected{% endif %}>{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Action type filter -->
+                <div class="col-md-3">
+                    <label for="action_type" class="form-label">Action Type</label>
+                    <select name="action_type" id="action_type" class="form-select">
+                        <option value="">All Actions</option>
+                        {% for action_code, action_name in action_types %}
+                            <option value="{{ action_code }}" {% if current_filters.action_type == action_code %}selected{% endif %}>{{ action_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Model name filter -->
+                <div class="col-md-3">
+                    <label for="model_name" class="form-label">Model</label>
+                    <select name="model_name" id="model_name" class="form-select">
+                        <option value="">All Models</option>
+                        {% for model in model_names %}
+                            {% if model %}
+                                <option value="{{ model }}" {% if current_filters.model_name == model %}selected{% endif %}>{{ model }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date range filters -->
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ current_filters.start_date }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ current_filters.end_date }}">
+                </div>
+
+                <!-- Search filter -->
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" placeholder="Search..." value="{{ current_filters.search }}">
+                </div>
+
+                <!-- Sort by filter -->
+                <div class="col-md-3">
+                    <label for="sort_by" class="form-label">Sort By</label>
+                    <select name="sort_by" id="sort_by" class="form-select">
+                        <option value="-timestamp">Newest First</option>
+                        <option value="timestamp">Oldest First</option>
+                        <option value="user__username">User (A-Z)</option>
+                        <option value="-user__username">User (Z-A)</option>
+                        <option value="action_type">Action Type (A-Z)</option>
+                        <option value="model_name">Model (A-Z)</option>
+                    </select>
+                </div>
+
+                <!-- Submit and reset buttons -->
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Apply Filters</button>
+                    <a href="{% url 'user-action-list' %}" class="btn btn-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Results</h5>
+                <span class="badge bg-secondary">{{ paginator.count }} actions found</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Model</th>
+                            <th>Record ID</th>
+                            <th>IP Address</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for action in actions %}
+                            <tr>
+                                <td>{{ action.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ action.user.username }}</td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        {{ action.get_action_type_display }}
+                                    </span>
+                                </td>
+                                <td>{{ action.model_name|default:"-" }}</td>
+                                <td>{{ action.record_id|default:"-" }}</td>
+                                <td>{{ action.ip_address|default:"-" }}</td>
+                                <td>{{ action.details|default:"-" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">No actions found matching the current filters.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            {% include 'dashboard/includes/pagination.html' %}
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set selected values for dropdowns based on current filters
+        const currentFilters = {
+            user_id: "{{ current_filters.user_id }}",
+            action_type: "{{ current_filters.action_type }}",
+            model_name: "{{ current_filters.model_name }}",
+            sort_by: "{{ current_filters.sort_by }}"
+        };
+
+        // Set selected option for user_id
+        if (currentFilters.user_id) {
+            const userIdValue = currentFilters.user_id.replace(/"/g, '\\"');
+            const userIdSelector = document.querySelector('#user_id option[value="' + userIdValue + '"]');
+            if (userIdSelector) {
+                userIdSelector.setAttribute('selected', 'selected');
+            } else {
+                console.log('User ID option not found:', userIdValue);
+            }
+        }
+
+        // Set selected option for action_type
+        if (currentFilters.action_type) {
+            const actionTypeValue = currentFilters.action_type.replace(/"/g, '\\"');
+            const actionTypeSelector = document.querySelector('#action_type option[value="' + actionTypeValue + '"]');
+            if (actionTypeSelector) {
+                actionTypeSelector.setAttribute('selected', 'selected');
+            } else {
+                console.log('Action type option not found:', actionTypeValue);
+            }
+        }
+
+        // Set selected option for model_name
+        if (currentFilters.model_name) {
+            const modelNameValue = currentFilters.model_name.replace(/"/g, '\\"');
+            const modelNameSelector = document.querySelector('#model_name option[value="' + modelNameValue + '"]');
+            if (modelNameSelector) {
+                modelNameSelector.setAttribute('selected', 'selected');
+            } else {
+                console.log('Model name option not found:', modelNameValue);
+            }
+        }
+
+        // Set selected option for sort_by
+        if (currentFilters.sort_by) {
+            // Need to handle special characters in the value
+            const sortByValue = currentFilters.sort_by.replace(/"/g, '\\"');
+            const sortBySelector = document.querySelector('#sort_by option[value="' + sortByValue + '"]');
+            if (sortBySelector) {
+                sortBySelector.setAttribute('selected', 'selected');
+            } else {
+                console.log('Sort by option not found:', sortByValue);
+            }
+        }
+    });
+</script>
+{% endblock %}

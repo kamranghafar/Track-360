@@ -1,0 +1,130 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Update SOP Status | Track360{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="mb-3">Update SOP Status</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'sop-list' %}">SOP Management</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sop-detail' object.pk %}">{{ object.name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Update Status</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Update Status for "{{ object.name }}"</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">Current Status</h5>
+                        <p>
+                            <span class="badge 
+                                {% if object.status == 'in_progress' %}bg-primary
+                                {% elif object.status == 'under_review' %}bg-info
+                                {% elif object.status == 'review_done' %}bg-success
+                                {% elif object.status == 'rollout_in_progress' %}bg-warning text-dark
+                                {% elif object.status == 'rollout_done' %}bg-success
+                                {% elif object.status == 'active' %}bg-success
+                                {% elif object.status == 'inactive' %}bg-secondary
+                                {% endif %}">
+                                {{ object.get_status_display }}
+                            </span>
+                        </p>
+                        <hr>
+                        <p class="mb-0">Select a new status below to update.</p>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label">New Status</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.status.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Select the new status for this SOP.</div>
+                </div>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'sop-detail' object.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Details
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> Update Status
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Status Workflow</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <p>The typical SOP status workflow is:</p>
+                    <ol>
+                        <li><strong>In Progress</strong> - SOP is being drafted or updated</li>
+                        <li><strong>Under Review</strong> - SOP is being reviewed by stakeholders</li>
+                        <li><strong>Review Done</strong> - Review is complete, ready for rollout</li>
+                        <li><strong>Rollout in Progress</strong> - SOP is being implemented</li>
+                        <li><strong>Rollout Done</strong> - SOP has been fully implemented</li>
+                        <li><strong>Active</strong> - SOP is currently in use</li>
+                        <li><strong>Inactive</strong> - SOP is no longer in use</li>
+                    </ol>
+                    <p class="text-muted">Note: Status changes are logged in the SOP's history.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        
+        // Fetch all forms we want to apply validation to
+        var forms = document.querySelectorAll('.needs-validation');
+        
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}

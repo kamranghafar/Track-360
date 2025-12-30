@@ -1,0 +1,158 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Strategic Roadmap Items{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Strategic Roadmap Items</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">All Roadmap Items</h6>
+                    <div>
+                        <a href="{% url 'roadmap-item-create' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Add New Item
+                        </a>
+                        <a href="{% url 'roadmap-timeline' %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-map"></i> Timeline View
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Filters -->
+                    <div class="mb-4">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-2">
+                                <label for="owner" class="form-label">Owner</label>
+                                <select name="owner" id="owner" class="form-control">
+                                    <option value="">All Owners</option>
+                                    {% for owner in owners %}
+                                        <option value="{{ owner.id }}">{{ owner.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="project" class="form-label">Project</label>
+                                <select name="project" id="project" class="form-control">
+                                    <option value="">All Projects</option>
+                                    {% for project in projects %}
+                                        <option value="{{ project.id }}">{{ project.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="status" class="form-label">Status</label>
+                                <select name="status" id="status" class="form-control">
+                                    <option value="">All Statuses</option>
+                                    {% for status_key, status_value in statuses.items %}
+                                        <option value="{{ status_key }}">{{ status_value }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="quarter" class="form-label">Quarter</label>
+                                <select name="quarter" id="quarter" class="form-control">
+                                    <option value="">All Quarters</option>
+                                    {% for quarter in quarters %}
+                                        <option value="{{ quarter.id }}">{{ quarter }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="sort_by" class="form-label">Sort By</label>
+                                <select name="sort_by" id="sort_by" class="form-control">
+                                    <option value="start_date">Start Date</option>
+                                    <option value="end_date">End Date</option>
+                                    <option value="title">Title</option>
+                                    <option value="status">Status</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="sort_order" class="form-label">Order</label>
+                                <select name="sort_order" id="sort_order" class="form-control">
+                                    <option value="asc">Ascending</option>
+                                    <option value="desc">Descending</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                <a href="{% url 'roadmap-item-list' %}" class="btn btn-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Roadmap Items Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Owner</th>
+                                    <th>Quarter</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in roadmap_items %}
+                                <tr>
+                                    <td>{{ item.title }}</td>
+                                    <td>{{ item.owner.name }}</td>
+                                    <td>{{ item.quarter }}</td>
+                                    <td>{{ item.start_date }}</td>
+                                    <td>{{ item.end_date }}</td>
+                                    <td>
+                                        {% if item.status == 'not_started' %}
+                                            <span class="badge bg-secondary">Not Started</span>
+                                        {% elif item.status == 'in_progress' %}
+                                            <span class="badge bg-primary">In Progress</span>
+                                        {% elif item.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'roadmap-item-detail' pk=item.id %}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'roadmap-item-update' pk=item.id %}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if item.status == 'not_started' %}
+                                            <a href="{% url 'start-roadmap-item' pk=item.id %}" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-play"></i>
+                                            </a>
+                                        {% elif item.status == 'in_progress' %}
+                                            <a href="{% url 'complete-roadmap-item' pk=item.id %}" class="btn btn-success btn-sm">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'roadmap-item-delete' pk=item.id %}" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No roadmap items found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <div class="mt-4">
+                        {% include 'dashboard/includes/pagination.html' %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

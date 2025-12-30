@@ -1,0 +1,779 @@
+{% extends 'dashboard/base.html' %}
+{% load custom_filters %}
+
+{% block extra_css %}
+<style>
+    /* Enhanced styling for coverage charts */
+    .chart-container {
+        transition: all 0.3s ease;
+    }
+
+    .coverage-card {
+        transition: all 0.3s ease;
+        background-color: #ffffff;
+    }
+
+    .coverage-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+
+    .coverage-percentage {
+        margin: 10px 0;
+    }
+
+    .card-header.bg-gradient {
+        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        border-bottom: 1px solid rgba(0,0,0,0.125);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 767.98px) {
+        .chart-container {
+            height: 180px !important;
+        }
+
+        .coverage-percentage .display-6 {
+            font-size: 1.8rem;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 991.98px) {
+        .chart-container {
+            height: 200px !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block title %}Product: {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Product: {{ product.name }}</h1>
+        <div>
+            <a href="{% url 'product-update' product.id %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'product-delete' product.id %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+            <a href="{% url 'product-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Product Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Name:</th>
+                            <td>{{ product.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Description:</th>
+                            <td>{{ product.description|default:"No description provided"|linebreaks }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if product.status == 'not_started' %}
+                                <span class="badge bg-secondary">Not Started</span>
+                                {% elif product.status == 'in_progress' %}
+                                <span class="badge bg-primary">In Progress</span>
+                                {% elif product.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif product.status == 'on_hold' %}
+                                <span class="badge bg-warning">On Hold</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ product.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated:</th>
+                            <td>{{ product.updated_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Manual Updates Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Manual Updates</h5>
+                </div>
+                <div class="card-body">
+                    {% if manual_updates %}
+                    <div class="accordion" id="accordionManualUpdates">
+                        {% for update in manual_updates %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="manualHeading{{ update.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#manualCollapse{{ update.id }}" aria-expanded="false" 
+                                        aria-controls="manualCollapse{{ update.id }}">
+                                    {{ update.meeting.title }} - {{ update.meeting.meeting_date|date:"M d, Y" }}
+                                    <span class="ms-auto badge bg-info">Updated: {{ update.updated_at|date:"M d, Y H:i" }}</span>
+                                </button>
+                            </h2>
+                            <div id="manualCollapse{{ update.id }}" class="accordion-collapse collapse" 
+                                 aria-labelledby="manualHeading{{ update.id }}" data-bs-parent="#accordionManualUpdates">
+                                <div class="accordion-body">
+                                    {% if update.product_notes %}
+                                    <h6>Product Notes</h6>
+                                    <p>{{ update.product_notes|safe }}</p>
+                                    {% endif %}
+
+                                    {% if update.problems %}
+                                    <h6>Problems</h6>
+                                    <p>{{ update.problems|safe }}</p>
+                                    {% endif %}
+
+                                    {% if update.expected_solution %}
+                                    <h6>Expected Solutions</h6>
+                                    <p>{{ update.expected_solution|safe }}</p>
+                                    {% endif %}
+
+                                    {% if update.product_problems.all %}
+                                    <h6>Detailed Problems</h6>
+                                    <ul class="list-group">
+                                        {% for problem in update.product_problems.all %}
+                                        <li class="list-group-item">
+                                            <strong>Problem:</strong> {{ problem.problem_description|safe }}
+                                            {% if problem.expected_solutions %}
+                                            <strong>Solutions:</strong> {{ problem.expected_solutions|safe }}
+                                            {% endif %}
+                                            <strong>Timeline:</strong> {{ problem.get_solution_timeline_display }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No manual updates available for this product.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Documentation Card -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Documentation</h5>
+                    <a href="{% url 'product-documentation-create' product.id %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-plus"></i> Add Documentation
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if documentation %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Added</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in documentation %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ doc.link }}" target="_blank" rel="noopener noreferrer">
+                                            {{ doc.title }}
+                                            <i class="fas fa-external-link-alt fa-xs ml-1"></i>
+                                        </a>
+                                    </td>
+                                    <td>{{ doc.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'product-documentation-update' doc.id %}" class="btn btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'product-documentation-delete' doc.id %}" class="btn btn-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No documentation has been added for this product yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Automation Details Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Automation Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Smoke Automation Status:</th>
+                            <td>
+                                {% if product.smoke_automation_status == 'hold' %}
+                                <span class="badge bg-warning">Hold</span>
+                                {% elif product.smoke_automation_status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif product.smoke_automation_status == 'in_progress' %}
+                                <span class="badge bg-primary">In Progress</span>
+                                {% elif product.smoke_automation_status == 'na' %}
+                                <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Regression Automation Status:</th>
+                            <td>
+                                {% if product.regression_automation_status == 'hold' %}
+                                <span class="badge bg-warning">Hold</span>
+                                {% elif product.regression_automation_status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif product.regression_automation_status == 'in_progress' %}
+                                <span class="badge bg-primary">In Progress</span>
+                                {% elif product.regression_automation_status == 'na' %}
+                                <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Pipeline Schedule:</th>
+                            <td>
+                                {% if product.pipeline_schedule == 'on_demand' %}
+                                <span class="badge bg-info">On-Demand</span>
+                                {% elif product.pipeline_schedule == 'weekly' %}
+                                <span class="badge bg-primary">Weekly</span>
+                                {% elif product.pipeline_schedule == 'nightly' %}
+                                <span class="badge bg-dark">Nightly</span>
+                                {% elif product.pipeline_schedule == 'na' %}
+                                <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Execution Time of Smoke:</th>
+                            <td>{{ product.execution_time_of_smoke|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Available Test Cases:</th>
+                            <td>{{ product.total_number_of_available_test_cases|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Automation Run Status:</th>
+                            <td>{{ product.status_of_last_automation_run|default:"Not specified"|linebreaks }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Automation Run Date:</th>
+                            <td>{{ product.date_of_last_automation_run|date:"M d, Y"|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Automation Framework/Tech Stack:</th>
+                            <td>{{ product.automation_framework_tech_stack|default:"Not specified"|linebreaks }}</td>
+                        </tr>
+                        <tr>
+                            <th>Team Lead:</th>
+                            <td>{{ product.team_lead.name|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Regression Coverage:</th>
+                            <td>{{ product.regression_coverage|default:"Not specified" }}{% if product.regression_coverage %} %{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Smoke Coverage:</th>
+                            <td>{{ product.smoke_coverage|default:"Not specified" }}{% if product.smoke_coverage %} %{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Bugs Found Through Automation:</th>
+                            <td>{{ product.bugs_found_through_automation|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Automatable Test Cases:</th>
+                            <td>{{ product.total_automatable_test_cases|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Automatable Smoke Test Cases:</th>
+                            <td>{{ product.total_automatable_smoke_test_cases|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Automated Test Cases:</th>
+                            <td>{{ product.total_automated_test_cases|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Automated Smoke Test Cases:</th>
+                            <td>{{ product.total_automated_smoke_test_cases|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Sprint Cycle:</th>
+                            <td>{{ product.sprint_cycle|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Functional Test Cases:</th>
+                            <td>{{ product.total_number_of_functional_test_cases|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Business Test Cases:</th>
+                            <td>{{ product.total_number_of_business_test_cases|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>OAT Release Cycle:</th>
+                            <td>{{ product.oat_release_cycle|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Readiness for Production:</th>
+                            <td>
+                                {% if product.in_production %}
+                                <span class="badge bg-success">In Production</span>
+                                {% elif product.in_development %}
+                                <span class="badge bg-warning">In Development</span>
+                                {% else %}
+                                <span class="badge bg-danger">Not Ready</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Test Coverage Charts -->
+            <div class="card mb-4">
+                <div class="card-header bg-gradient">
+                    <h5><i class="fas fa-chart-pie me-2"></i>Test Coverage</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Smoke Coverage Chart -->
+                        <div class="col-md-6 mb-4">
+                            <div class="coverage-card p-3 h-100 border rounded shadow-sm">
+                                <h6 class="text-center fw-bold mb-3">Smoke Test Coverage</h6>
+                                <div class="chart-container" style="position: relative; height: 220px; margin: auto;">
+                                    <canvas id="smokeCoverageChart"
+                                        data-labels="{{ smoke_coverage_data|extract_values_json:'name' }}"
+                                        data-values="{{ smoke_coverage_data|extract_values_json:'coverage' }}"></canvas>
+                                </div>
+                                <div class="text-center mt-3">
+                                    {% if product.smoke_coverage %}
+                                    <div class="coverage-percentage">
+                                        <span class="display-6 fw-bold text-success">{{ product.smoke_coverage }}%</span>
+                                    </div>
+                                    <p class="text-muted">of smoke test cases automated</p>
+                                    {% else %}
+                                    <p class="text-muted">No smoke coverage data available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Regression Coverage Chart -->
+                        <div class="col-md-6 mb-4">
+                            <div class="coverage-card p-3 h-100 border rounded shadow-sm">
+                                <h6 class="text-center fw-bold mb-3">Regression Test Coverage</h6>
+                                <div class="chart-container" style="position: relative; height: 220px; margin: auto;">
+                                    <canvas id="regressionCoverageChart"
+                                        data-labels="{{ regression_coverage_data|extract_values_json:'name' }}"
+                                        data-values="{{ regression_coverage_data|extract_values_json:'coverage' }}"></canvas>
+                                </div>
+                                <div class="text-center mt-3">
+                                    {% if product.regression_coverage %}
+                                    <div class="coverage-percentage">
+                                        <span class="display-6 fw-bold text-primary">{{ product.regression_coverage }}%</span>
+                                    </div>
+                                    <p class="text-muted">of regression test cases automated</p>
+                                    {% else %}
+                                    <p class="text-muted">No regression coverage data available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Assigned Resources</h5>
+                    <a href="{% url 'assign-resource' product.id %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-user-plus"></i> Assign Resource
+                    </a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Role</th>
+                                <th>Skill</th>
+                                <th>Hours</th>
+                                <th>Utilization %</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pr in product_resources %}
+                            <tr>
+                                <td><a href="{% url 'resource-detail' pr.resource.id %}">{{ pr.resource.name }}</a></td>
+                                <td>{{ pr.resource.role|default:"Not specified" }}</td>
+                                <td>{{ pr.resource.get_skill_display }}</td>
+                                <td>{{ pr.hours_allocated }}</td>
+                                <td>{{ pr.utilization_percentage }}%</td>
+                                <td>
+                                    <a href="{% url 'remove-resource' product.id pr.resource.id %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-user-minus"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No resources assigned to this product.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Backup Resources Card -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Backup Resources</h5>
+                    <a href="{% url 'assign-backup-resource' product.id %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-user-plus"></i> Assign Backup Resource
+                    </a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Role</th>
+                                <th>Assignment Status</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for br in backup_resources %}
+                            <tr>
+                                <td><a href="{% url 'resource-detail' br.resource.id %}">{{ br.resource.name }}</a></td>
+                                <td>{{ br.resource.role|default:"Not specified" }}</td>
+                                <td>
+                                    <span class="badge bg-info">Backup</span>
+                                    {% if br.resource in product.resources.all %}
+                                    <span class="badge bg-warning">Also Primary</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ br.notes|default:"" }}</td>
+                                <td>
+                                    <a href="{% url 'remove-backup-resource' product.id br.resource.id %}" class="btn btn-sm btn-danger" 
+                                       onclick="return confirm('Are you sure you want to remove this backup resource?');">
+                                        <i class="fas fa-user-minus"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No backup resources assigned to this product.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- Historical Project Updates -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Historical Project Updates</h5>
+                </div>
+                <div class="card-body">
+                    {% if historical_updates %}
+                    <div class="accordion" id="accordionHistoricalUpdates">
+                        {% for update in historical_updates %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ update.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ update.id }}" aria-expanded="false" 
+                                        aria-controls="collapse{{ update.id }}">
+                                    {{ update.meeting.title }} - {{ update.meeting.meeting_date|date:"M d, Y" }}
+                                    <span class="ms-auto badge bg-info">Updated: {{ update.updated_at|date:"M d, Y H:i" }}</span>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ update.id }}" class="accordion-collapse collapse" 
+                                 aria-labelledby="heading{{ update.id }}" data-bs-parent="#accordionHistoricalUpdates">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6>Automation Status</h6>
+                                            <table class="table table-sm">
+                                                <tr>
+                                                    <th>Smoke Automation:</th>
+                                                    <td>
+                                                        {% if update.smoke_automation_status == 'in_progress' %}
+                                                        <span class="badge bg-primary">In Progress</span>
+                                                        {% elif update.smoke_automation_status == 'completed' %}
+                                                        <span class="badge bg-success">Completed</span>
+                                                        {% elif update.smoke_automation_status == 'hold' %}
+                                                        <span class="badge bg-warning">Hold</span>
+                                                        {% else %}
+                                                        <span class="badge bg-secondary">N/A</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Regression Automation:</th>
+                                                    <td>
+                                                        {% if update.regression_automation_status == 'in_progress' %}
+                                                        <span class="badge bg-primary">In Progress</span>
+                                                        {% elif update.regression_automation_status == 'completed' %}
+                                                        <span class="badge bg-success">Completed</span>
+                                                        {% elif update.regression_automation_status == 'hold' %}
+                                                        <span class="badge bg-warning">Hold</span>
+                                                        {% else %}
+                                                        <span class="badge bg-secondary">N/A</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Pipeline Schedule:</th>
+                                                    <td>{{ update.get_pipeline_schedule_display }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Execution Time:</th>
+                                                    <td>{{ update.get_execution_time_display }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Last Run Date:</th>
+                                                    <td>{{ update.last_automation_run_date|date:"M d, Y"|default:"Not available" }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Last Run Status:</th>
+                                                    <td>{{ update.last_automation_run_status|default:"Not available" }}</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6>Test Case Metrics</h6>
+                                            <table class="table table-sm">
+                                                <tr>
+                                                    <th>Available Test Cases:</th>
+                                                    <td>{{ update.total_available_test_cases }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Automatable Test Cases:</th>
+                                                    <td>{{ update.total_automatable_test_cases }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Automated Test Cases:</th>
+                                                    <td>{{ update.total_automated_test_cases }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Automated Smoke Test Cases:</th>
+                                                    <td>{{ update.total_automated_smoke_test_cases }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Functional Test Cases:</th>
+                                                    <td>{{ update.functional_test_cases_count }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Business Test Cases:</th>
+                                                    <td>{{ update.business_test_cases_count }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Regression Coverage:</th>
+                                                    <td>{{ update.regression_coverage }}%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Bugs Found:</th>
+                                                    <td>{{ update.bugs_found_through_automation }}</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No historical updates available for this project.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to create a chart
+        function createChart(canvasId, chartType, labels, data, backgroundColor, borderColor, customOptions) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            let chartLabels = labels;
+            let chartData = data;
+
+            // If labels and data are not provided, try to get them from data attributes
+            if (!chartLabels || !chartData) {
+                try {
+                    chartLabels = JSON.parse(canvas.getAttribute('data-labels'));
+                    chartData = JSON.parse(canvas.getAttribute('data-values'));
+                } catch (e) {
+                    console.error('Error parsing chart data:', e);
+                    return;
+                }
+            }
+
+            // Default colors if not provided
+            const defaultBackgroundColors = [
+                'rgba(75, 192, 192, 0.6)',
+                'rgba(255, 99, 132, 0.6)',
+                'rgba(54, 162, 235, 0.6)',
+                'rgba(255, 206, 86, 0.6)',
+                'rgba(153, 102, 255, 0.6)',
+                'rgba(255, 159, 64, 0.6)'
+            ];
+
+            const defaultBorderColors = [
+                'rgba(75, 192, 192, 1)',
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ];
+
+            // Use provided colors or defaults
+            const bgColors = backgroundColor || defaultBackgroundColors;
+            const borderColors = borderColor || defaultBorderColors;
+
+            // Default options
+            let adjustedOptions = {
+                responsive: true,
+                maintainAspectRatio: false
+            };
+
+            // Adjust options based on chart type
+            if (chartType === 'pie' || chartType === 'doughnut') {
+                adjustedOptions.scales = {};
+            }
+
+            // Merge custom options if provided
+            const chartOptions = customOptions ? { ...adjustedOptions, ...customOptions } : adjustedOptions;
+
+            // Create the chart
+            new Chart(canvas, {
+                type: chartType,
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: bgColors,
+                        borderColor: borderColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        // Create the coverage charts with enhanced UI/UX
+        createChart('smokeCoverageChart', 'doughnut', null, null, 
+            ['rgba(46, 204, 113, 0.8)', 'rgba(220, 220, 220, 0.6)'], 
+            ['rgba(46, 204, 113, 1)', 'rgba(220, 220, 220, 1)'], 
+            {
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 14
+                        }
+                    }
+                },
+                cutout: '65%',
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        );
+
+        createChart('regressionCoverageChart', 'doughnut', null, null, 
+            ['rgba(52, 152, 219, 0.8)', 'rgba(220, 220, 220, 0.6)'], 
+            ['rgba(52, 152, 219, 1)', 'rgba(220, 220, 220, 1)'], 
+            {
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 14
+                        }
+                    }
+                },
+                cutout: '65%',
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        );
+    });
+</script>
+{% endblock %}

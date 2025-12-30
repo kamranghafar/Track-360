@@ -1,7 +1,7 @@
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
-║              PORTABLE DASHBOARD - BINARY DISTRIBUTION v1.0                   ║
+║              PORTABLE DASHBOARD - PROTECTED DISTRIBUTION v2.0                ║
 ║                          READ THIS FIRST!                                    ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
@@ -10,13 +10,13 @@
 ⚠️  IMPORTANT NOTICE ⚠️
 ═══════════════════════
 
-This is a COMPILED BINARY DISTRIBUTION
+This is a PROTECTED SOURCE DISTRIBUTION with COMPILE-ON-INSTALL
 
 ✓ Application is FULLY FUNCTIONAL
-✓ Source code is NOT INCLUDED
-✓ Code is COMPILED to bytecode (.pyc files)
-✓ Application logic is PROTECTED
-✓ Ready to use - PLUG AND PLAY!
+✓ Setup COMPILES for YOUR Python version (cross-version compatible!)
+✓ OPTIONAL source code removal during setup
+✓ Application logic can be PROTECTED
+✓ Works with ANY Python 3.8+ version!
 
 
 ═══════════════════════════════════════════════════════════════════════════════

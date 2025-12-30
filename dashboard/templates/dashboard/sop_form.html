@@ -1,0 +1,105 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} | Track360{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="mb-3">{{ title }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'sop-list' %}">SOP Management</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">SOP Form</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">SOP Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.name.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Enter the name of the SOP.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.link.id_for_label }}" class="form-label">SOP Link</label>
+                    {{ form.link }}
+                    {% if form.link.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.link.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Enter the URL link to the SOP document.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.status.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Select the current status of the SOP.</div>
+                </div>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'sop-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if object %}Update{% else %}Create{% endif %} SOP
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        
+        // Fetch all forms we want to apply validation to
+        var forms = document.querySelectorAll('.needs-validation');
+        
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Delete Product: {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Delete Product: {{ product.name }}</h1>
+        <a href="{% url 'product-list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Warning!</h4>
+                <p>Are you sure you want to delete the product "{{ product.name }}"?</p>
+                <p>This action cannot be undone. All data associated with this product will be permanently deleted.</p>
+                
+                {% if product.resources.exists %}
+                <hr>
+                <p class="mb-0">This product currently has {{ product.resources.count }} resource(s) assigned to it:</p>
+                <ul>
+                    {% for resource in product.resources.all %}
+                    <li>{{ resource.name }}</li>
+                    {% endfor %}
+                </ul>
+                <p>Deleting this product will remove all resource assignments.</p>
+                {% endif %}
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'product-detail' product.id %}" class="btn btn-secondary me-md-2">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Confirm Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

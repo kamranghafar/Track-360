@@ -1,0 +1,133 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Automation Updates{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Automation Updates</h1>
+        <a href="{% url 'weekly-meeting-create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Update
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <ul class="nav nav-tabs" id="meetingTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="true">
+                        <span>Active Updates</span>
+                        <span class="badge rounded-pill bg-primary ms-2">{{ active_count|default:"0" }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+                        <span>Updates History</span>
+                        <span class="badge rounded-pill bg-secondary ms-2">{{ completed_count|default:"0" }}</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="meetingTabsContent">
+                <div class="tab-pane fade show active" id="active" role="tabpanel" aria-labelledby="active-tab">
+                    <div class="table-responsive mt-3">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Title</th>
+                                    <th>Projects</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for meeting in meetings %}
+                                {% if not meeting.is_completed %}
+                                <tr>
+                                    <td>{{ meeting.meeting_date|date:"M d, Y H:i" }}</td>
+                                    <td>{{ meeting.title }}</td>
+                                    <td>{{ meeting.project_count }}</td>
+                                    <td>
+                                        <span class="badge bg-warning">Pending</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'weekly-meeting-detail' meeting.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'weekly-meeting-update' meeting.id %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'weekly-meeting-delete' meeting.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No active updates available.</td>
+                                </tr>
+                                {% endfor %}
+                                {% if not has_active_meetings %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No active updates available.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                    <div class="table-responsive mt-3">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Title</th>
+                                    <th>Projects</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for meeting in meetings %}
+                                {% if meeting.is_completed %}
+                                <tr>
+                                    <td>{{ meeting.meeting_date|date:"M d, Y H:i" }}</td>
+                                    <td>{{ meeting.title }}</td>
+                                    <td>{{ meeting.project_count }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Completed</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'weekly-meeting-detail' meeting.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'weekly-meeting-update' meeting.id %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'weekly-meeting-delete' meeting.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                                {% if not has_completed_meetings %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No completed updates available.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {% include 'dashboard/includes/pagination.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}
