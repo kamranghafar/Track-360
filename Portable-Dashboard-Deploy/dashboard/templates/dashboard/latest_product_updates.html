@@ -1,0 +1,1065 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Latest Product Updates{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page layout improvements */
+    .updates-container {
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .page-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-description {
+        color: #6c757d;
+        font-size: 1rem;
+        max-width: 800px;
+    }
+
+    /* Improved tab styling */
+    .nav-tabs {
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+
+    .nav-tabs .nav-link {
+        transition: all 0.3s ease;
+        border-radius: 0.25rem 0.25rem 0 0;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        color: #495057;
+        position: relative;
+        margin-right: 0.25rem;
+    }
+
+    .nav-tabs .nav-link:not(.active):hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        border-color: transparent;
+        color: #0d6efd;
+    }
+
+    .tab-content .tab-pane {
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .tab-content .tab-pane.fade:not(.show) {
+        display: block;
+        opacity: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
+    /* Highlight active tab more prominently */
+    .nav-tabs .nav-link.active {
+        border-top: 3px solid #0d6efd;
+        font-weight: 600;
+        color: #0d6efd;
+    }
+
+    .nav-tabs .nav-link i {
+        margin-right: 0.5rem;
+    }
+
+    /* Add loading indicator for page transitions */
+    .nav-tabs .nav-link[href]:not([href="#"]):before {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: #0d6efd;
+        transition: width 0.3s ease;
+    }
+
+    .nav-tabs .nav-link[href]:not([href="#"]):active:before {
+        width: 100%;
+    }
+
+    /* Table container styling */
+    .table-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Custom styling for Latest Product Updates table */
+    .product-updates-table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+    }
+
+    .product-updates-table tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .product-updates-table tr:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.02) !important;
+    }
+
+    .product-updates-table tr:hover {
+        background-color: rgba(13, 110, 253, 0.05) !important;
+    }
+
+    /* Improved table header styling */
+    .product-updates-table th {
+        padding: 5px 8px !important;
+        width: 149.996px !important;
+        min-width: 149.996px !important;
+        height: 41.992px !important;
+        font-weight: 600;
+        vertical-align: middle;
+        border-bottom: 2px solid #dee2e6;
+        text-align: left;
+        background-color: #800000 !important;
+        color: white !important;
+        font-size: 10px !important;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .product-updates-table th:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: #800000 !important;
+    }
+
+    /* Consistent table cell styling */
+    .product-updates-table td {
+        padding: 15px;
+        vertical-align: middle;
+        border-top: 1px solid #f0f0f0;
+        transition: all 0.2s ease;
+    }
+
+    .product-updates-table tbody tr:first-child td {
+        border-top: none;
+    }
+
+    /* Styling for expandable content */
+    .expandable-content {
+        max-height: 150px;
+        overflow-y: auto;
+        word-break: break-word;
+        min-width: 150px;
+        line-height: 1.6;
+        padding-right: 10px;
+        color: #333;
+        font-size: 0.95rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .expandable-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .expandable-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .expandable-content::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+
+    .expandable-content::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    .expandable-content:hover {
+        background-color: rgba(0, 0, 0, 0.01);
+    }
+
+    .expandable-content.has-content {
+        position: relative;
+    }
+
+    .expandable-content.has-content:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 20px;
+        background: linear-gradient(to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    .expandable-content.expanded {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .expandable-content.expanded:after {
+        display: none;
+    }
+
+    .expand-button {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background-color: rgba(255, 255, 255, 0.9);
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 0.75rem;
+        color: #6c757d;
+        cursor: pointer;
+        z-index: 1;
+        transition: all 0.2s ease;
+    }
+
+    .expand-button:hover {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+    }
+
+    .expand-button i {
+        margin-right: 3px;
+    }
+
+    /* Timeline badge styling */
+    .timeline-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+        display: inline-block;
+        text-align: center;
+        min-width: 100px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .timeline-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .timeline-badge.short {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .timeline-badge.medium {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+
+    .timeline-badge.long {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Product name styling */
+    .product-name a {
+        color: #0d6efd;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+
+    .product-name a:hover {
+        color: #0a58ca;
+        text-decoration: underline;
+    }
+
+    /* Update status indicators */
+    .update-status {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 2px 6px;
+        border-radius: 12px;
+        vertical-align: middle;
+    }
+
+    .update-status i {
+        margin-right: 3px;
+        font-size: 0.7rem;
+    }
+
+    .status-new {
+        background-color: #cff4fc;
+        color: #055160;
+        border: 1px solid #b6effb;
+    }
+
+    .status-updated {
+        background-color: #e2e3ff;
+        color: #2a2f8d;
+        border: 1px solid #d4d5ff;
+    }
+
+    .status-critical {
+        background-color: #f8d7da;
+        color: #842029;
+        border: 1px solid #f5c2c7;
+    }
+
+    /* Last updated styling */
+    .last-updated {
+        color: #6c757d;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .last-updated i {
+        margin-right: 0.5rem;
+        color: #adb5bd;
+    }
+
+    /* Empty state styling */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #dee2e6;
+    }
+
+    .empty-state h4 {
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+
+    .empty-state p {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    /* Responsive table improvements */
+    @media (max-width: 992px) {
+        .product-updates-table th {
+            width: 149.996px !important;
+            min-width: 149.996px !important;
+            padding: 4px 6px !important;
+            height: 41.992px !important;
+            font-size: 13px !important;
+            background-color: #800000 !important;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .product-updates-table td {
+            padding: 12px;
+        }
+
+        .expandable-content {
+            max-height: 120px;
+            min-width: 120px;
+        }
+
+        .product-name a {
+            font-size: 1rem;
+        }
+
+        .timeline-badge {
+            min-width: 90px;
+            padding: 5px 10px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 1.75rem;
+        }
+
+        .updates-container {
+            padding: 1rem;
+        }
+
+        .product-updates-table th {
+            width: 149.996px !important;
+            min-width: 149.996px !important;
+            padding: 3px 5px !important;
+            height: 41.992px !important;
+            font-size: 12px !important;
+            background-color: #800000 !important;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .product-updates-table td {
+            padding: 10px 8px;
+            font-size: 0.9rem;
+        }
+
+        .expandable-content {
+            max-height: 100px;
+            min-width: 100px;
+            font-size: 0.9rem;
+        }
+
+        .product-name a {
+            font-size: 0.95rem;
+        }
+
+        .timeline-badge {
+            min-width: 80px;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Loading animation */
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+
+    .loading-shimmer {
+        animation: shimmer 2s infinite linear;
+        background: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+        background-size: 1000px 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="updates-container">
+        <div class="page-header d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h1 class="page-title">Latest Product Updates</h1>
+                <p class="page-description">View the most recent updates for all products across the organization. This page shows the latest status, problems, and expected solutions for each product.</p>
+            </div>
+            <a href="{% url 'weekly-product-meeting-list' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Updates
+            </a>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="meetingTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="{% url 'weekly-product-meeting-list' %}" id="active-tab" role="tab" data-tab="active">
+                            <i class="fas fa-calendar-check me-1"></i> Active Updates
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="{% url 'weekly-product-meeting-list' %}" id="history-tab" role="tab" data-tab="history">
+                            <i class="fas fa-history me-1"></i> Updates History
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" href="{% url 'latest-product-updates' %}" id="updates-tab" role="tab">
+                            <i class="fas fa-box-open me-1"></i> Latest Product Updates
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="meetingTabsContent">
+                    <div class="tab-pane fade show active" id="updates" role="tabpanel" aria-labelledby="updates-tab">
+                        <!-- Search and filter controls -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 mt-3">
+                            <div class="d-flex align-items-center">
+                                <div class="input-group me-3" style="width: 300px;">
+                                    <span class="input-group-text bg-white">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" id="tableSearch" class="form-control border-start-0" placeholder="Search updates..." aria-label="Search updates">
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-filter me-1"></i> Filter
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="all">All Updates</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><span class="dropdown-header">By Status</span></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="new-updates">New Updates</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="has-issues">Has Issues</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="no-issues">No Issues</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><span class="dropdown-header">By Timeline</span></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="short">Short Timeline</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="medium">Medium Timeline</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-filter="long">Long Timeline</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted me-2" id="resultCount"></span>
+                                <button class="btn btn-outline-primary" id="refreshTable">
+                                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <div class="table-responsive">
+                                <table class="table product-updates-table" id="productUpdatesTable">
+                                    <thead>
+                                        <tr>
+                                            <th data-tooltip="The name of the product" data-sort="product" style="padding: 5px 8px !important; width: 149.996px !important; min-width: 149.996px !important; height: 41.992px !important; font-size: 14px !important; background-color: #800000 !important; color: white !important;">Product Name <i class="fas fa-sort ms-1"></i></th>
+                                            <th data-tooltip="Additional notes about the product" style="padding: 5px 8px !important; width: 149.996px !important; min-width: 149.996px !important; height: 41.992px !important; font-size: 14px !important; background-color: #800000 !important; color: white !important;">Product Notes</th>
+                                            <th data-tooltip="Current issues or challenges" style="padding: 5px 8px !important; width: 149.996px !important; min-width: 149.996px !important; height: 41.992px !important; font-size: 14px !important; background-color: #800000 !important; color: white !important;">Problems</th>
+                                            <th data-tooltip="Proposed resolution for the problems" style="padding: 5px 8px !important; width: 149.996px !important; min-width: 149.996px !important; height: 41.992px !important; font-size: 14px !important; background-color: #800000 !important; color: white !important;">Expected Solution</th>
+                                            <th data-tooltip="Estimated timeline for implementing the solution" data-sort="timeline" style="padding: 5px 8px !important; width: 149.996px !important; min-width: 149.996px !important; height: 41.992px !important; font-size: 14px !important; background-color: #800000 !important; color: white !important;">Solution Timeline <i class="fas fa-sort ms-1"></i></th>
+                                            <th data-tooltip="When this information was last updated" data-sort="date" style="padding: 5px 8px !important; width: 149.996px !important; min-width: 149.996px !important; height: 41.992px !important; font-size: 14px !important; background-color: #800000 !important; color: white !important;">Last Updated <i class="fas fa-sort ms-1"></i></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for update in product_updates %}
+                                        <tr data-timeline="{{ update.solution_timeline }}" data-has-problems="{% if update.problems %}yes{% else %}no{% endif %}" data-date="{{ update.meeting.meeting_date|date:'Y-m-d' }}">
+                                            <td class="product-name">
+                                                <a href="{% url 'product-detail' update.project.id %}">
+                                                    {{ update.project.name }}
+                                                </a>
+                                                {% if update.meeting.meeting_date|date:'Y-m-d' >= now|date:'Y-m-d'|add:'-7 days' %}
+                                                    <span class="update-status status-new" title="Added within the last 7 days">
+                                                        <i class="fas fa-star"></i> New
+                                                    </span>
+                                                {% endif %}
+                                                {% if update.problems %}
+                                                    <span class="update-status status-critical" title="Has reported problems">
+                                                        <i class="fas fa-exclamation-triangle"></i> Issues
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="expandable-content {% if update.product_notes %}has-content{% endif %}" data-content-type="product-notes">
+                                                    {{ update.product_notes|safe }}
+                                                    {% if update.product_notes|length > 150 %}
+                                                    <button class="expand-button" data-action="expand">
+                                                        <i class="fas fa-chevron-down"></i> More
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="expandable-content {% if update.problems %}has-content{% endif %}" data-content-type="problems">
+                                                    {{ update.problems|safe }}
+                                                    {% if update.problems|length > 150 %}
+                                                    <button class="expand-button" data-action="expand">
+                                                        <i class="fas fa-chevron-down"></i> More
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="expandable-content {% if update.expected_solution %}has-content{% endif %}" data-content-type="solution">
+                                                    {{ update.expected_solution|safe }}
+                                                    {% if update.expected_solution|length > 150 %}
+                                                    <button class="expand-button" data-action="expand">
+                                                        <i class="fas fa-chevron-down"></i> More
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="timeline-badge {{ update.solution_timeline }}" 
+                                                      data-tooltip="{% if update.solution_timeline == 'short' %}Less than 1 month{% elif update.solution_timeline == 'medium' %}1-3 months{% else %}More than 3 months{% endif %}">
+                                                    {{ update.solution_timeline_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="last-updated" data-date="{{ update.meeting.meeting_date|date:'Y-m-d' }}">
+                                                    <i class="far fa-calendar-alt"></i>
+                                                    {{ update.meeting.meeting_date|date:"M d, Y" }}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr id="emptyRow">
+                                            <td colspan="7">
+                                                <div class="empty-state">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    <h4>No Updates Available</h4>
+                                                    <p>There are no product updates available at this time. Updates will appear here once they are added during product meetings.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- No results message (hidden by default) -->
+                        <div id="noSearchResults" class="empty-state py-4" style="display: none;">
+                            <i class="fas fa-search"></i>
+                            <h4>No Matching Results</h4>
+                            <p>No products match your search criteria. Try adjusting your search terms or filters.</p>
+                            <button class="btn btn-outline-secondary mt-2" id="clearSearch">
+                                <i class="fas fa-times me-1"></i> Clear Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Store 'updates' as the active tab
+        localStorage.setItem('manualUpdatesActiveTab', 'updates');
+
+        // Handle clicks on tab links to store the correct tab
+        const tabLinks = document.querySelectorAll('#meetingTabs .nav-link');
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.hasAttribute('data-tab')) {
+                    // For links to weekly-product-meeting-list, store the tab to activate
+                    const tabToActivate = this.getAttribute('data-tab');
+                    localStorage.setItem('manualUpdatesActiveTab', tabToActivate);
+
+                    // Modify the href to include the hash
+                    const baseUrl = this.getAttribute('href').split('#')[0];
+                    this.setAttribute('href', baseUrl + '#' + tabToActivate);
+                }
+            });
+        });
+
+        // Add smooth transition for tab content
+        const tabPane = document.querySelector('.tab-pane');
+        if (tabPane) {
+            tabPane.style.transition = 'opacity 0.3s ease-in-out';
+        }
+
+        // Table search and filtering functionality
+        const tableSearch = document.getElementById('tableSearch');
+        const productTable = document.getElementById('productUpdatesTable');
+        const tableRows = productTable ? productTable.querySelectorAll('tbody tr:not(#emptyRow)') : [];
+        const resultCount = document.getElementById('resultCount');
+        const noSearchResults = document.getElementById('noSearchResults');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const refreshTableBtn = document.getElementById('refreshTable');
+        const filterOptions = document.querySelectorAll('.filter-option');
+        const sortableHeaders = document.querySelectorAll('th[data-sort]');
+
+        let currentFilter = 'all';
+        let currentSortColumn = '';
+        let currentSortDirection = 'asc';
+
+        // Initialize result count
+        updateResultCount();
+
+        // Search functionality
+        if (tableSearch) {
+            tableSearch.addEventListener('input', function() {
+                filterTable();
+            });
+        }
+
+        // Clear search
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', function() {
+                if (tableSearch) {
+                    tableSearch.value = '';
+                }
+                currentFilter = 'all';
+                highlightActiveFilter();
+                filterTable();
+            });
+        }
+
+        // Refresh table
+        if (refreshTableBtn) {
+            refreshTableBtn.addEventListener('click', function() {
+                // Add loading animation
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Refreshing...';
+
+                // Simulate refresh (in a real app, this would fetch new data)
+                setTimeout(() => {
+                    if (tableSearch) {
+                        tableSearch.value = '';
+                    }
+                    currentFilter = 'all';
+                    currentSortColumn = '';
+                    currentSortDirection = 'asc';
+
+                    // Reset all sorting indicators
+                    sortableHeaders.forEach(header => {
+                        const icon = header.querySelector('i');
+                        if (icon) {
+                            icon.className = 'fas fa-sort ms-1';
+                        }
+                    });
+
+                    highlightActiveFilter();
+                    filterTable();
+
+                    // Restore button state
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Refresh';
+
+                    // Show success message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i> Table refreshed successfully.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+
+                    const tableContainer = document.querySelector('.table-container');
+                    if (tableContainer) {
+                        tableContainer.parentNode.insertBefore(alertDiv, tableContainer);
+
+                        // Auto-dismiss after 3 seconds
+                        setTimeout(() => {
+                            alertDiv.classList.remove('show');
+                            setTimeout(() => alertDiv.remove(), 150);
+                        }, 3000);
+                    }
+                }, 800);
+            });
+        }
+
+        // Filter dropdown options
+        filterOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentFilter = this.getAttribute('data-filter');
+                highlightActiveFilter();
+                filterTable();
+            });
+        });
+
+        // Sortable columns
+        sortableHeaders.forEach(header => {
+            header.style.cursor = 'pointer';
+
+            header.addEventListener('click', function() {
+                const sortColumn = this.getAttribute('data-sort');
+
+                // Toggle sort direction or set to asc if it's a new column
+                if (currentSortColumn === sortColumn) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortColumn = sortColumn;
+                    currentSortDirection = 'asc';
+                }
+
+                // Update sort icons
+                sortableHeaders.forEach(h => {
+                    const icon = h.querySelector('i');
+                    if (icon) {
+                        if (h.getAttribute('data-sort') === currentSortColumn) {
+                            icon.className = currentSortDirection === 'asc' 
+                                ? 'fas fa-sort-up ms-1' 
+                                : 'fas fa-sort-down ms-1';
+                        } else {
+                            icon.className = 'fas fa-sort ms-1';
+                        }
+                    }
+                });
+
+                sortTable();
+            });
+        });
+
+        // Function to filter the table based on search input and selected filter
+        function filterTable() {
+            const searchTerm = tableSearch ? tableSearch.value.toLowerCase() : '';
+            let visibleCount = 0;
+
+            tableRows.forEach(row => {
+                const productName = row.querySelector('.product-name a').textContent.toLowerCase();
+                const productNotes = row.querySelector('td:nth-child(2) .expandable-content').textContent.toLowerCase();
+                const problems = row.querySelector('td:nth-child(3) .expandable-content').textContent.toLowerCase();
+                const expectedSolution = row.querySelector('td:nth-child(4) .expandable-content').textContent.toLowerCase();
+                const timeline = row.getAttribute('data-timeline');
+                const hasProblems = row.getAttribute('data-has-problems');
+
+                // Check if row matches search term
+                const matchesSearch = searchTerm === '' || 
+                    productName.includes(searchTerm) || 
+                    productNotes.includes(searchTerm) || 
+                    problems.includes(searchTerm) || 
+                    expectedSolution.includes(searchTerm);
+
+                // Check if row matches selected filter
+                let matchesFilter = true;
+
+                if (currentFilter === 'short' || currentFilter === 'medium' || currentFilter === 'long') {
+                    matchesFilter = timeline === currentFilter;
+                } else if (currentFilter === 'has-issues') {
+                    matchesFilter = hasProblems === 'yes';
+                } else if (currentFilter === 'no-issues') {
+                    matchesFilter = hasProblems === 'no';
+                } else if (currentFilter === 'new-updates') {
+                    // Check if the update is within the last 7 days
+                    const updateDate = new Date(row.getAttribute('data-date'));
+                    const sevenDaysAgo = new Date();
+                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                    matchesFilter = updateDate >= sevenDaysAgo;
+                }
+
+                // Show/hide row based on both conditions
+                if (matchesSearch && matchesFilter) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            if (noSearchResults) {
+                if (visibleCount === 0 && tableRows.length > 0) {
+                    noSearchResults.style.display = 'block';
+                } else {
+                    noSearchResults.style.display = 'none';
+                }
+            }
+
+            // Update result count
+            updateResultCount(visibleCount);
+        }
+
+        // Function to sort the table
+        function sortTable() {
+            if (!currentSortColumn) return;
+
+            const tbody = productTable.querySelector('tbody');
+            const rows = Array.from(tableRows);
+
+            rows.sort((a, b) => {
+                let valueA, valueB;
+
+                if (currentSortColumn === 'product') {
+                    valueA = a.querySelector('.product-name a').textContent.toLowerCase();
+                    valueB = b.querySelector('.product-name a').textContent.toLowerCase();
+                } else if (currentSortColumn === 'timeline') {
+                    // Sort by timeline priority (short, medium, long)
+                    const timelinePriority = { 'short': 1, 'medium': 2, 'long': 3 };
+                    valueA = timelinePriority[a.getAttribute('data-timeline')] || 0;
+                    valueB = timelinePriority[b.getAttribute('data-timeline')] || 0;
+                } else if (currentSortColumn === 'date') {
+                    valueA = a.querySelector('.last-updated').getAttribute('data-date') || '';
+                    valueB = b.querySelector('.last-updated').getAttribute('data-date') || '';
+                }
+
+                // Compare values based on sort direction
+                if (currentSortDirection === 'asc') {
+                    return valueA > valueB ? 1 : -1;
+                } else {
+                    return valueA < valueB ? 1 : -1;
+                }
+            });
+
+            // Reorder rows in the DOM
+            rows.forEach(row => {
+                tbody.appendChild(row);
+            });
+
+            // Keep the empty row at the end if it exists
+            const emptyRow = document.getElementById('emptyRow');
+            if (emptyRow) {
+                tbody.appendChild(emptyRow);
+            }
+        }
+
+        // Function to highlight the active filter in the dropdown
+        function highlightActiveFilter() {
+            filterOptions.forEach(option => {
+                if (option.getAttribute('data-filter') === currentFilter) {
+                    option.classList.add('active');
+                    option.innerHTML = `<i class="fas fa-check me-2"></i>${option.textContent}`;
+                } else {
+                    option.classList.remove('active');
+                    option.innerHTML = option.textContent.replace('<i class="fas fa-check me-2"></i>', '');
+                }
+            });
+
+            // Update dropdown button text
+            const filterDropdown = document.getElementById('filterDropdown');
+            if (filterDropdown) {
+                let filterText = 'Filter';
+                let filterIcon = 'fa-filter';
+
+                if (currentFilter === 'short') {
+                    filterText = 'Short Timeline';
+                } else if (currentFilter === 'medium') {
+                    filterText = 'Medium Timeline';
+                } else if (currentFilter === 'long') {
+                    filterText = 'Long Timeline';
+                } else if (currentFilter === 'has-issues') {
+                    filterText = 'Has Issues';
+                    filterIcon = 'fa-exclamation-triangle';
+                } else if (currentFilter === 'no-issues') {
+                    filterText = 'No Issues';
+                    filterIcon = 'fa-check-circle';
+                } else if (currentFilter === 'new-updates') {
+                    filterText = 'New Updates';
+                    filterIcon = 'fa-star';
+                }
+
+                filterDropdown.innerHTML = `<i class="fas ${filterIcon} me-1"></i> ${filterText}`;
+            }
+        }
+
+        // Function to update the result count
+        function updateResultCount(visibleCount) {
+            if (resultCount) {
+                if (visibleCount === undefined) {
+                    visibleCount = tableRows.length;
+                }
+
+                if (tableRows.length === 0) {
+                    resultCount.textContent = 'No updates available';
+                } else if (visibleCount === tableRows.length) {
+                    resultCount.textContent = `Showing all ${visibleCount} updates`;
+                } else {
+                    resultCount.textContent = `Showing ${visibleCount} of ${tableRows.length} updates`;
+                }
+            }
+        }
+
+        // Initialize tooltips for table headers
+        const tableHeaders = document.querySelectorAll('th[data-tooltip]');
+        tableHeaders.forEach(header => {
+            header.addEventListener('mouseenter', function() {
+                const tooltip = this.getAttribute('data-tooltip');
+                if (!tooltip) return;
+
+                const tooltipEl = document.createElement('div');
+                tooltipEl.className = 'header-tooltip';
+                tooltipEl.textContent = tooltip;
+                tooltipEl.style.position = 'absolute';
+                tooltipEl.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                tooltipEl.style.color = 'white';
+                tooltipEl.style.padding = '5px 10px';
+                tooltipEl.style.borderRadius = '4px';
+                tooltipEl.style.fontSize = '12px';
+                tooltipEl.style.zIndex = '1000';
+                tooltipEl.style.maxWidth = '200px';
+                tooltipEl.style.textAlign = 'center';
+                tooltipEl.style.pointerEvents = 'none';
+
+                document.body.appendChild(tooltipEl);
+
+                const headerRect = this.getBoundingClientRect();
+                tooltipEl.style.top = (headerRect.bottom + window.scrollY + 5) + 'px';
+                tooltipEl.style.left = (headerRect.left + window.scrollX + (headerRect.width / 2) - (tooltipEl.offsetWidth / 2)) + 'px';
+
+                this.addEventListener('mouseleave', function() {
+                    tooltipEl.remove();
+                }, { once: true });
+            });
+        });
+
+        // Initialize tooltips for timeline badges
+        const timelineBadges = document.querySelectorAll('.timeline-badge[data-tooltip]');
+        timelineBadges.forEach(badge => {
+            badge.addEventListener('mouseenter', function() {
+                const tooltip = this.getAttribute('data-tooltip');
+                if (!tooltip) return;
+
+                const tooltipEl = document.createElement('div');
+                tooltipEl.className = 'badge-tooltip';
+                tooltipEl.textContent = tooltip;
+                tooltipEl.style.position = 'absolute';
+                tooltipEl.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                tooltipEl.style.color = 'white';
+                tooltipEl.style.padding = '5px 10px';
+                tooltipEl.style.borderRadius = '4px';
+                tooltipEl.style.fontSize = '12px';
+                tooltipEl.style.zIndex = '1000';
+                tooltipEl.style.maxWidth = '200px';
+                tooltipEl.style.textAlign = 'center';
+                tooltipEl.style.pointerEvents = 'none';
+
+                document.body.appendChild(tooltipEl);
+
+                const badgeRect = this.getBoundingClientRect();
+                tooltipEl.style.top = (badgeRect.bottom + window.scrollY + 5) + 'px';
+                tooltipEl.style.left = (badgeRect.left + window.scrollX + (badgeRect.width / 2) - (tooltipEl.offsetWidth / 2)) + 'px';
+
+                this.addEventListener('mouseleave', function() {
+                    tooltipEl.remove();
+                }, { once: true });
+            });
+        });
+
+        // Initialize expand/collapse functionality for expandable content
+        const expandButtons = document.querySelectorAll('.expand-button');
+        expandButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const contentContainer = this.closest('.expandable-content');
+                const action = this.getAttribute('data-action');
+                const contentType = contentContainer.getAttribute('data-content-type');
+
+                if (action === 'expand') {
+                    // Expand the content
+                    contentContainer.classList.add('expanded');
+                    this.setAttribute('data-action', 'collapse');
+                    this.innerHTML = '<i class="fas fa-chevron-up"></i> Less';
+
+                    // Log the action for analytics (in a real app)
+                    console.log(`Expanded ${contentType} content`);
+                } else {
+                    // Collapse the content
+                    contentContainer.classList.remove('expanded');
+                    this.setAttribute('data-action', 'expand');
+                    this.innerHTML = '<i class="fas fa-chevron-down"></i> More';
+
+                    // Scroll back to the top of the content if it's out of view
+                    contentContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                    // Log the action for analytics (in a real app)
+                    console.log(`Collapsed ${contentType} content`);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

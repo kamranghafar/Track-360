@@ -1,0 +1,115 @@
+{% extends 'dashboard/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Production Bugs Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 mb-0">Production Bugs Management</h1>
+            <p class="text-muted">Track and manage production issues for all products</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'production-bug-create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Production Bug
+            </a>
+        </div>
+    </div>
+
+    <!-- Bugs Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Production Bugs</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Product</th>
+                            <th>Status</th>
+                            <th>Severity</th>
+                            <th>Reported Date</th>
+                            <th>Resolved Date</th>
+                            <th>Test Case Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if bugs %}
+                            {% for bug in bugs %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'production-bug-detail' bug.pk %}">{{ bug.title }}</a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'product-detail' bug.project.pk %}">{{ bug.project.name }}</a>
+                                    </td>
+                                    <td>
+                                        {% if bug.status == 'open' %}
+                                            <span class="badge bg-danger">Open</span>
+                                        {% elif bug.status == 'in_progress' %}
+                                            <span class="badge bg-warning">In Progress</span>
+                                        {% elif bug.status == 'resolved' %}
+                                            <span class="badge bg-info">Resolved</span>
+                                        {% elif bug.status == 'tested' %}
+                                            <span class="badge bg-primary">Tested</span>
+                                        {% elif bug.status == 'done' %}
+                                            <span class="badge bg-success">Done</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if bug.severity == 'high' %}
+                                            <span class="badge bg-danger">High</span>
+                                        {% elif bug.severity == 'medium' %}
+                                            <span class="badge bg-warning">Medium</span>
+                                        {% elif bug.severity == 'low' %}
+                                            <span class="badge bg-info">Low</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ bug.reported_date }}</td>
+                                    <td>{{ bug.resolved_date|default:"-" }}</td>
+                                    <td>
+                                        {% if bug.test_case_added == 'yes' %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'production-bug-detail' bug.pk %}" class="btn btn-outline-primary" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'production-bug-update' bug.pk %}" class="btn btn-outline-secondary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'production-bug-delete' bug.pk %}" class="btn btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <p class="mb-0 text-muted">No production bugs found.</p>
+                                    <a href="{% url 'production-bug-create' %}" class="btn btn-sm btn-primary mt-2">
+                                        <i class="fas fa-plus"></i> Add Production Bug
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            {% include 'dashboard/includes/pagination.html' with page_obj=page_obj %}
+        </div>
+    </div>
+</div>
+{% endblock %}

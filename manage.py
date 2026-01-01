@@ -1,16 +1,22 @@
 #!/usr/bin/env python
-"""Dashboard Runtime - Binary Distribution"""
-import sys
+"""Django's command-line utility for administrative tasks."""
 import os
+import sys
 
-# Set up environment
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dashboard_project.settings')
 
-# Import and run Django
-try:
-    from django.core.management import execute_from_command_line
-except ImportError as exc:
-    raise ImportError("Django not installed. Run setup first.") from exc
+def main():
+    """Run administrative tasks."""
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dashboard_project.settings')
+    try:
+        from django.core.management import execute_from_command_line
+    except ImportError as exc:
+        raise ImportError(
+            "Couldn't import Django. Are you sure it's installed and "
+            "available on your PYTHONPATH environment variable? Did you "
+            "forget to activate a virtual environment?"
+        ) from exc
+    execute_from_command_line(sys.argv)
+
 
 if __name__ == '__main__':
-    execute_from_command_line(sys.argv)
+    main()

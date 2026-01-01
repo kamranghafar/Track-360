@@ -1,0 +1,148 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Quarter Target: {{ target.project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Quarter Target: {{ target.project.name }}</h1>
+        <div>
+            <a href="{% url 'quarter-detail' target.quarter.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Quarter
+            </a>
+            <a href="{% url 'product-detail' target.project.id %}" class="btn btn-info">
+                <i class="fas fa-project-diagram"></i> View Project
+            </a>
+            <a href="{% url 'quarter-target-update' target.id %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'quarter-target-delete' target.id %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Target Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Quarter:</th>
+                            <td>{{ target.quarter }}</td>
+                        </tr>
+                        <tr>
+                            <th>Project:</th>
+                            <td>{{ target.project.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Target Description:</th>
+                            <td>{{ target.target_description|linebreaks }}</td>
+                        </tr>
+                        <tr>
+                            <th>Target Value:</th>
+                            <td>{{ target.target_value|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ target.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated:</th>
+                            <td>{{ target.updated_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Assigned Resources</h5>
+                    <a href="{% url 'assign-resource-to-target' target.id %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-user-plus"></i> Assign Resource
+                    </a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Role</th>
+                                <th>Skill</th>
+                                <th>Allocation %</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for resource_assignment in resources %}
+                            <tr>
+                                <td><a href="{% url 'resource-detail' resource_assignment.resource.id %}">{{ resource_assignment.resource.name }}</a></td>
+                                <td>{{ resource_assignment.resource.role|default:"Not specified" }}</td>
+                                <td>{{ resource_assignment.resource.get_skill_display }}</td>
+                                <td>{{ resource_assignment.allocation_percentage }}%</td>
+                                <td>{{ resource_assignment.notes|truncatechars:30 }}</td>
+                                <td>
+                                    <a href="{% url 'remove-resource-from-target' target.id resource_assignment.resource.id %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-user-minus"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No resources assigned to this target.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Project Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Project Status:</th>
+                            <td>
+                                {% if target.project.status == 'not_started' %}
+                                <span class="badge bg-secondary">Not Started</span>
+                                {% elif target.project.status == 'in_progress' %}
+                                <span class="badge bg-primary">In Progress</span>
+                                {% elif target.project.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif target.project.status == 'on_hold' %}
+                                <span class="badge bg-warning">On Hold</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Project Start Date:</th>
+                            <td>{{ target.project.start_date|date:"M d, Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Project End Date:</th>
+                            <td>{{ target.project.end_date|date:"M d, Y"|default:"Not set" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Project Description:</th>
+                            <td>{{ target.project.description|default:"No description provided"|linebreaks }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

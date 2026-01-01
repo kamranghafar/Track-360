@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% extends 'dashboard/base.html' %}
+
+{% block title %}User Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">User Settings</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Account Settings</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Last Login:</strong> {{ user.last_login|date:"F j, Y, g:i a" }}</p>
+
+                    <div class="mt-4">
+                        <a href="{% url 'password_change' %}" class="btn btn-primary">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Activity Logs</h5>
+                </div>
+                <div class="card-body">
+                    <p>View a history of your recent activities in the system.</p>
+
+                    <a href="{% url 'user-action-list' %}" class="btn btn-primary">
+                        <i class="fas fa-history me-2"></i>View Activity Logs
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Resource Linking</h5>
+                </div>
+                <div class="card-body">
+                    <p>Link your user account to a resource record to enable role-based features.</p>
+
+                    {% if user.resource %}
+                    <p><strong>Linked Resource:</strong> {{ user.resource.name }}</p>
+                    {% else %}
+                    <p><strong>Status:</strong> No resource linked to your account</p>
+                    {% endif %}
+
+                    <a href="{% url 'link-user-resource' %}" class="btn btn-primary">
+                        <i class="fas fa-link me-2"></i>Link to Resource
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

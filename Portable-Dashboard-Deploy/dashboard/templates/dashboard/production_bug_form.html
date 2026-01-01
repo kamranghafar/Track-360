@@ -1,0 +1,143 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 mb-0">{{ title }}</h1>
+            <p class="text-muted">{% if form.instance.pk %}Edit existing{% else %}Add new{% endif %} production bug</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'production-bug-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Bug Information</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                        {{ form.title.errors }}
+                        <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" 
+                               class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
+                               value="{{ form.title.value|default:'' }}" required>
+                        {% if form.title.help_text %}
+                            <div class="form-text">{{ form.title.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.project.id_for_label }}" class="form-label">{{ form.project.label }}</label>
+                        {{ form.project.errors }}
+                        {{ form.project }}
+                        {% if form.project.help_text %}
+                            <div class="form-text">{{ form.project.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                        {{ form.status.errors }}
+                        {{ form.status }}
+                        {% if form.status.help_text %}
+                            <div class="form-text">{{ form.status.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.severity.id_for_label }}" class="form-label">{{ form.severity.label }}</label>
+                        {{ form.severity.errors }}
+                        {{ form.severity }}
+                        {% if form.severity.help_text %}
+                            <div class="form-text">{{ form.severity.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.reported_date.id_for_label }}" class="form-label">{{ form.reported_date.label }}</label>
+                        {{ form.reported_date.errors }}
+                        {{ form.reported_date }}
+                        {% if form.reported_date.help_text %}
+                            <div class="form-text">{{ form.reported_date.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.resolved_date.id_for_label }}" class="form-label">{{ form.resolved_date.label }}</label>
+                        {{ form.resolved_date.errors }}
+                        {{ form.resolved_date }}
+                        {% if form.resolved_date.help_text %}
+                            <div class="form-text">{{ form.resolved_date.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.gops_board_link.id_for_label }}" class="form-label">{{ form.gops_board_link.label }}</label>
+                        {{ form.gops_board_link.errors }}
+                        <input type="url" name="{{ form.gops_board_link.name }}" id="{{ form.gops_board_link.id_for_label }}" 
+                               class="form-control {% if form.gops_board_link.errors %}is-invalid{% endif %}" 
+                               value="{{ form.gops_board_link.value|default:'' }}">
+                        {% if form.gops_board_link.help_text %}
+                            <div class="form-text">{{ form.gops_board_link.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.product_board_link.id_for_label }}" class="form-label">{{ form.product_board_link.label }}</label>
+                        {{ form.product_board_link.errors }}
+                        <input type="url" name="{{ form.product_board_link.name }}" id="{{ form.product_board_link.id_for_label }}" 
+                               class="form-control {% if form.product_board_link.errors %}is-invalid{% endif %}" 
+                               value="{{ form.product_board_link.value|default:'' }}">
+                        {% if form.product_board_link.help_text %}
+                            <div class="form-text">{{ form.product_board_link.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.test_case_added.id_for_label }}" class="form-label">{{ form.test_case_added.label }}</label>
+                        {{ form.test_case_added.errors }}
+                        {{ form.test_case_added }}
+                        {% if form.test_case_added.help_text %}
+                            <div class="form-text">{{ form.test_case_added.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.details.id_for_label }}" class="form-label">{{ form.details.label }}</label>
+                    {{ form.details.errors }}
+                    <textarea name="{{ form.details.name }}" id="{{ form.details.id_for_label }}" 
+                              class="form-control {% if form.details.errors %}is-invalid{% endif %}" 
+                              rows="5">{{ form.details.value|default:'' }}</textarea>
+                    {% if form.details.help_text %}
+                        <div class="form-text">{{ form.details.help_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <a href="{% url 'production-bug-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

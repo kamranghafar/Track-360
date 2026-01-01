@@ -1,0 +1,100 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Edit Resource Allocation for {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Edit Resource Allocation: {{ resource.name }} on {{ project.name }}</h1>
+        <a href="{% url 'resource-planning' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Resource Planning
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="resource" class="form-label">Resource</label>
+                    <input type="text" class="form-control" value="{{ resource.name }}" readonly>
+                    <div class="form-text">Resource cannot be changed. To assign a different resource, remove this allocation and create a new one.</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" name="start_date" id="start_date" class="form-control" 
+                                   value="{{ project_resource.start_date|date:'Y-m-d' }}" required>
+                            <div class="form-text">Start date of resource's involvement in the project.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" name="end_date" id="end_date" class="form-control"
+                                   value="{{ project_resource.end_date|date:'Y-m-d' }}">
+                            <div class="form-text">Optional end date of resource's involvement in the project.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="hours_allocated" class="form-label">Hours Allocated</label>
+                    <input type="number" name="hours_allocated" id="hours_allocated" class="form-control" 
+                           value="{{ project_resource.hours_allocated }}" min="0" step="0.5" required>
+                    <div class="form-text">Estimated hours this resource will spend on the project.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="utilization_percentage" class="form-label">Utilization Percentage</label>
+                    <input type="number" name="utilization_percentage" id="utilization_percentage" class="form-control" 
+                           value="{{ project_resource.utilization_percentage }}" min="0" max="100" step="0.01" required>
+                    <div class="form-text">Resource utilization percentage for this project (maximum 100%).</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea name="notes" id="notes" class="form-control" rows="3">{{ project_resource.notes }}</textarea>
+                    <div class="form-text">Optional notes about this resource assignment.</div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'resource-planning' %}" class="btn btn-secondary me-md-2">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Validate that end date is after start date
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        function validateDates() {
+            if (endDateInput.value && startDateInput.value > endDateInput.value) {
+                endDateInput.setCustomValidity('End date must be after start date');
+            } else {
+                endDateInput.setCustomValidity('');
+            }
+        }
+        
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
+        
+        // Initial validation
+        validateDates();
+    });
+</script>
+{% endblock %}

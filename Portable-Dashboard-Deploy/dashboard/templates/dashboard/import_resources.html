@@ -1,0 +1,78 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Import Resources{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Import Resources</h1>
+        <div>
+            <a href="{% url 'resource-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Resources
+            </a>
+            <a href="{% url 'resource-sample-file' %}?format=csv" class="btn btn-info">
+                <i class="fas fa-download"></i> Download CSV Sample
+            </a>
+            <a href="{% url 'resource-sample-file' %}?format=excel" class="btn btn-info">
+                <i class="fas fa-download"></i> Download Excel Sample
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Upload Resource File</h5>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="file" class="form-label">Select CSV or Excel File</label>
+                    <input type="file" class="form-control" id="file" name="file" accept=".csv, .xls, .xlsx" required>
+                    <div class="form-text">
+                        The file should contain the following columns: name, email, role, skill, availability
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Import Resources
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>Import Instructions</h5>
+        </div>
+        <div class="card-body">
+            <h6>File Format</h6>
+            <p>The import file should be in CSV or Excel format with the following columns:</p>
+            <ul>
+                <li><strong>name</strong> (required): The name of the resource</li>
+                <li><strong>email</strong>: The email address of the resource</li>
+                <li><strong>role</strong>: The role of the resource</li>
+                <li><strong>skill</strong>: The skill of the resource (automation, manual, or both)</li>
+                <li><strong>availability</strong>: The availability of the resource (true/false, yes/no, 1/0)</li>
+            </ul>
+
+            <h6>Notes</h6>
+            <ul>
+                <li>If a resource with the same name already exists, it will be updated with the new information.</li>
+                <li>If a column is missing or empty, the corresponding field will be left blank or set to its default value.</li>
+                <li>The skill field must be one of: automation, manual, or both.</li>
+                <li>The availability field should be a boolean value (true/false, yes/no, 1/0).</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

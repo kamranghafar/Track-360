@@ -1,0 +1,4 @@
+                                            <tr>
+                                                <td>{{ leave.resource.name }}</td>
+                                                <td>{{ leave.get_leave_type_display }}</td>
+                                                <td>{{ leave.start_date|date:"M d, Y" }}</td>

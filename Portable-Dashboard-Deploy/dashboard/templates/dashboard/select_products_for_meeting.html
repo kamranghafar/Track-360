@@ -1,0 +1,206 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Select Products for Meeting: {{ meeting.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Select Products for Meeting: {{ meeting.title }}</h1>
+        <div>
+            <a href="{% url 'weekly-product-meeting-detail' meeting.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Meeting
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-dark">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-box-open me-2"></i>Select Products to Include in the Meeting
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Select the products you want to include in this meeting. You'll be able to add notes, problems, and solutions for each selected product.
+            </div>
+
+            <form method="post" action="{% url 'start-weekly-product-meeting' meeting.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="start_meeting" value="1">
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="selectAll">
+                                <i class="fas fa-check-square me-1"></i> Select All
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAll">
+                                <i class="fas fa-square me-1"></i> Deselect All
+                            </button>
+                        </div>
+                        <div class="input-group" style="width: 300px;">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" id="productSearch" class="form-control border-start-0" placeholder="Search products..." aria-label="Search products">
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;"></th>
+                                    <th>Product Name</th>
+                                    <th>Status</th>
+                                    <th>Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in projects %}
+                                <tr class="product-row">
+                                    <td class="text-center">
+                                        <div class="form-check">
+                                            <input class="form-check-input product-checkbox" type="checkbox" name="selected_projects" value="{{ project.id }}" id="product_{{ project.id }}">
+                                            <label class="form-check-label" for="product_{{ project.id }}"></label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <label for="product_{{ project.id }}" class="product-name cursor-pointer">
+                                            {{ project.name }}
+                                        </label>
+                                    </td>
+                                    <td>
+                                        {% if project.status == 'not_started' %}
+                                        <span class="badge bg-secondary">Not Started</span>
+                                        {% elif project.status == 'in_progress' %}
+                                        <span class="badge bg-primary">In Progress</span>
+                                        {% elif project.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% elif project.status == 'on_hold' %}
+                                        <span class="badge bg-warning">On Hold</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ project.updated_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No products available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="noProductsFound" class="alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No products match your search criteria.
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex justify-content-between">
+                    <span id="selectedCount" class="text-muted align-self-center">0 products selected</span>
+                    <div>
+                        <a href="{% url 'weekly-product-meeting-detail' meeting.id %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="startMeetingBtn" disabled>
+                            <i class="fas fa-play-circle me-1"></i>Start Meeting with Selected Products
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const productCheckboxes = document.querySelectorAll('.product-checkbox');
+        const selectAllBtn = document.getElementById('selectAll');
+        const deselectAllBtn = document.getElementById('deselectAll');
+        const productSearch = document.getElementById('productSearch');
+        const productsTable = document.getElementById('productsTable');
+        const productRows = document.querySelectorAll('.product-row');
+        const noProductsFound = document.getElementById('noProductsFound');
+        const selectedCount = document.getElementById('selectedCount');
+        const startMeetingBtn = document.getElementById('startMeetingBtn');
+        
+        // Function to update selected count and button state
+        function updateSelectedCount() {
+            const checkedCount = document.querySelectorAll('.product-checkbox:checked').length;
+            selectedCount.textContent = `${checkedCount} product${checkedCount !== 1 ? 's' : ''} selected`;
+            startMeetingBtn.disabled = checkedCount === 0;
+        }
+        
+        // Initialize selected count
+        updateSelectedCount();
+        
+        // Add click event to checkboxes
+        productCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+        
+        // Select all button
+        selectAllBtn.addEventListener('click', function() {
+            const visibleCheckboxes = document.querySelectorAll('.product-row:not([style*="display: none"]) .product-checkbox');
+            visibleCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateSelectedCount();
+        });
+        
+        // Deselect all button
+        deselectAllBtn.addEventListener('click', function() {
+            const visibleCheckboxes = document.querySelectorAll('.product-row:not([style*="display: none"]) .product-checkbox');
+            visibleCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateSelectedCount();
+        });
+        
+        // Search functionality
+        productSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+            
+            productRows.forEach(row => {
+                const productName = row.querySelector('.product-name').textContent.toLowerCase();
+                if (productName.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no products found message
+            if (visibleCount === 0 && productRows.length > 0) {
+                noProductsFound.style.display = 'block';
+                productsTable.style.display = 'none';
+            } else {
+                noProductsFound.style.display = 'none';
+                productsTable.style.display = '';
+            }
+        });
+        
+        // Make entire row clickable to toggle checkbox
+        document.querySelectorAll('.product-name').forEach(name => {
+            name.addEventListener('click', function(e) {
+                // Prevent default to avoid issues with label
+                e.preventDefault();
+                
+                // Find the checkbox in this row and toggle it
+                const checkbox = this.closest('tr').querySelector('.product-checkbox');
+                checkbox.checked = !checkbox.checked;
+                
+                // Update selected count
+                updateSelectedCount();
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,2995 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Resource Planning{% endblock %}
+
+{% block head_extras %}
+<link rel="stylesheet" href="{% static 'resource-planning.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center resource-planning-header">
+        <div>
+            <h1 class="mb-0">Resource Planning</h1>
+            <p class="text-muted mt-2">Manage resource allocations, leaves, and utilization</p>
+        </div>
+        <div class="resource-planning-actions">
+            <a href="{% url 'resource-leave-create' %}" class="btn btn-success me-2">
+                <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Add Leave</span>
+            </a>
+            <button id="add-allocation-btn" class="btn btn-primary">
+                <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Add Allocation</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab navigation -->
+    <ul class="nav nav-tabs mb-4" id="resourcePlanningTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="table-tab" data-bs-toggle="tab" data-bs-target="#table-view" type="button" role="tab" aria-controls="table-view" aria-selected="true">Table View</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar-view" type="button" role="tab" aria-controls="calendar-view" aria-selected="false">Calendar View</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="utilization-tab" data-bs-toggle="tab" data-bs-target="#utilization-view" type="button" role="tab" aria-controls="utilization-view" aria-selected="false">Resource Utilization</button>
+        </li>
+    </ul>
+
+    <!-- Tab content -->
+    <div class="tab-content" id="resourcePlanningTabContent">
+        <!-- Table View Tab -->
+        <div class="tab-pane fade show active" id="table-view" role="tabpanel" aria-labelledby="table-tab">
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card table-card">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                            <h5 class="mb-2 mb-md-0">Project Assignments</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="assignResourceDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Assign Resource</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="assignResourceDropdown">
+                                    {% for project in projects %}
+                                    <li><a class="dropdown-item" href="{% url 'assign-resource-with-dates' project.id %}">{{ project.name }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Project Assignments Filters -->
+                            <div class="filter-section mb-4">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6 col-lg-3">
+                                        <label for="pa-resource-filter" class="form-label">
+                                            <i class="fas fa-user text-primary me-1"></i> Resource:
+                                            <i class="fas fa-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="Filter assignments by resource name"></i>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            <select id="pa-resource-filter" class="form-select">
+                                                <option value="">All Resources</option>
+                                                {% for resource in resources %}
+                                                <option value="{{ resource.name }}">{{ resource.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <label for="pa-project-filter" class="form-label">
+                                            <i class="fas fa-project-diagram text-primary me-1"></i> Project:
+                                            <i class="fas fa-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="Filter assignments by project name"></i>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            <select id="pa-project-filter" class="form-select">
+                                                <option value="">All Projects</option>
+                                                {% for project in projects %}
+                                                <option value="{{ project.name }}">{{ project.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <label for="pa-start-date-filter" class="form-label">
+                                            <i class="fas fa-calendar-day text-primary me-1"></i> Start Date:
+                                            <i class="fas fa-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="Filter assignments starting from this date"></i>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                            <input type="date" id="pa-start-date-filter" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <label for="pa-end-date-filter" class="form-label">
+                                            <i class="fas fa-calendar-check text-primary me-1"></i> End Date:
+                                            <i class="fas fa-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="Filter assignments ending before this date"></i>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                            <input type="date" id="pa-end-date-filter" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label for="pa-utilization-filter" class="form-label">
+                                            <i class="fas fa-percentage text-primary me-1"></i> Utilization % (Min): 
+                                            <span id="pa-utilization-value" class="badge bg-primary">0%</span>
+                                            <i class="fas fa-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="Show resources with at least this utilization percentage"></i>
+                                        </label>
+                                        <input type="range" id="pa-utilization-filter" class="form-range" min="0" max="100" value="0">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="small text-muted">0% (All)</span>
+                                            <span class="small text-danger">50%</span>
+                                            <span class="small text-warning">75%</span>
+                                            <span class="small text-success">100%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button id="pa-reset-filters" class="btn btn-secondary w-100">
+                                            <i class="fas fa-undo me-1"></i> Reset Filters
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Resource</th>
+                                            <th>Project</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
+                                            <th>Utilization %</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="project-assignments-table">
+                                        {% if project_resources %}
+                                            {% for pr in project_resources %}
+                                            <tr>
+                                                <td>{{ pr.resource.name }}</td>
+                                                <td>{{ pr.project.name }}</td>
+                                                <td>{{ pr.start_date|date:"M d, Y" }}</td>
+                                                <td>{{ pr.end_date|date:"M d, Y"|default:"N/A" }}</td>
+                                                <td>{{ pr.utilization_percentage }}%</td>
+                                                <td>
+                                                    <a href="#" class="btn btn-sm btn-info view-event" data-event-id="project_{{ pr.id }}">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'edit-resource-allocation' pr.project.id pr.resource.id %}"
+                                                       class="btn btn-sm btn-warning">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{% url 'remove-resource-from-planning' pr.project.id pr.resource.id %}"
+                                                       class="btn btn-sm btn-danger"
+                                                       onclick="return confirm('Are you sure you want to remove this assignment?');">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="6" class="text-center">No project assignments found.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="6" class="text-center">No project assignments found.</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                                <div id="resource-utilization-message" class="mt-3 p-2 text-center"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card table-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Resource Leaves</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Resource Leaves Filters -->
+                            <div class="filter-section mb-4">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6 col-lg-3">
+                                        <label for="rl-resource-filter" class="form-label">Resource:</label>
+                                        <select id="rl-resource-filter" class="form-select">
+                                            <option value="">All Resources</option>
+                                            {% for resource in resources %}
+                                            <option value="{{ resource.name }}">{{ resource.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <label for="rl-leave-type-filter" class="form-label">Leave Type:</label>
+                                        <select id="rl-leave-type-filter" class="form-select">
+                                            <option value="">All Types</option>
+                                            <option value="Vacation">Vacation</option>
+                                            <option value="Sick">Sick</option>
+                                            <option value="Personal">Personal</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <label for="rl-search-filter" class="form-label">Search:</label>
+                                        <form method="get" action="{% url 'resource-planning' %}" class="d-flex">
+                                            <input type="text" id="rl-search-filter" name="search" class="form-control" placeholder="Search past leaves..." value="{{ request.GET.search }}">
+                                            <button type="submit" class="btn btn-primary ms-2">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3 d-flex align-items-end">
+                                        <button id="rl-reset-filters" class="btn btn-secondary w-100">Reset Filters</button>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="rl-start-date-filter" class="form-label">Start Date:</label>
+                                        <input type="date" id="rl-start-date-filter" class="form-control">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="rl-end-date-filter" class="form-label">End Date:</label>
+                                        <input type="date" id="rl-end-date-filter" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Resource</th>
+                                            <th>Leave Type</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resource-leaves-table">
+                                        {% if leaves %}
+                                            {% for leave in leaves %}
+                                            <tr>
+                                                <td>{{ leave.resource.name }}</td>
+                                                <td>{{ leave.get_leave_type_display }}</td>
+                                                <td>{{ leave.start_date|date:"M d, Y" }}</td>
+                                                <td>{{ leave.end_date|date:"M d, Y" }}</td>
+                                                <td>
+                                                    <a href="#" class="btn btn-sm btn-info view-event" data-event-id="leave_{{ leave.id }}">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'resource-leave-update' leave.id %}"
+                                                       class="btn btn-sm btn-warning">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{% url 'resource-leave-delete' leave.id %}"
+                                                       class="btn btn-sm btn-danger"
+                                                       onclick="return confirm('Are you sure you want to delete this leave?');">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="5" class="text-center">No resource leaves found.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="5" class="text-center">No resource leaves found.</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar View Tab -->
+        <div class="tab-pane fade" id="calendar-view" role="tabpanel" aria-labelledby="calendar-tab">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="mb-2 mb-md-0">Resource Timeline</h5>
+                    <div class="btn-group" role="group">
+                        <button id="month-view-btn" class="btn btn-outline-primary active">Month</button>
+                        <button id="week-view-btn" class="btn btn-outline-primary">Week</button>
+                        <button id="day-view-btn" class="btn btn-outline-primary">Day</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="filter-section mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-6 col-lg-4">
+                                <label for="resource-filter-select" class="form-label">Filter by Resource:</label>
+                                <select id="resource-filter-select" class="form-select">
+                                    <option value="all">All Resources</option>
+                                    {% for resource in resources %}
+                                    <option value="{{ resource.id }}">{{ resource.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <label for="project-filter-select" class="form-label">Filter by Project:</label>
+                                <select id="project-filter-select" class="form-select">
+                                    <option value="all">All Projects</option>
+                                    {% for project in projects %}
+                                    <option value="{{ project.id }}">{{ project.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-12 col-lg-4">
+                                <label for="department-filter-select" class="form-label">Filter by Lead:</label>
+                                <select id="department-filter-select" class="form-select">
+                                    <option value="all">All Leads</option>
+                                    {% for resource in resources %}
+                                        {% if resource.team_members_as_lead.all %}
+                                        <option value="{{ resource.id }}">{{ resource.name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="timeline-calendar" class="calendar-container"></div>
+
+                    <!-- Calendar Legend -->
+                    <div class="calendar-legend mt-3 p-2 border rounded bg-light">
+                        <h6 class="mb-2"><i class="fas fa-info-circle me-1"></i> Legend</h6>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: rgba(0, 123, 255, 0.1); border-left: 4px solid #007bff;"></span>
+                                <span class="legend-text">Project Assignment</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: rgba(220, 53, 69, 0.1); border-left: 4px solid #dc3545;"></span>
+                                <span class="legend-text">Resource Leave</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: rgba(220, 53, 69, 0.15); border: 2px dashed #dc3545;"></span>
+                                <span class="legend-text">Overallocated Resource</span>
+                            </div>
+                        </div>
+                        <div class="mt-2 small text-muted">
+                            <i class="fas fa-lightbulb me-1"></i> Tip: Click on any event to view details or edit
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resource Utilization Tab -->
+        <div class="tab-pane fade" id="utilization-view" role="tabpanel" aria-labelledby="utilization-tab">
+            <div class="card table-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Resource Utilization Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="resource-utilization-table">
+                            <thead>
+                                <tr>
+                                    <th>Resource Name</th>
+                                    <th>Total Allocation</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Details Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="eventModalBody">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="editEventBtn" class="btn btn-primary">Edit</a>
+                <a href="#" id="deleteEventBtn" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Allocation Modal -->
+<div class="modal fade" id="addAllocationModal" tabindex="-1" aria-labelledby="addAllocationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAllocationModalLabel">Add Resource Allocation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAllocationForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="allocation-resource" class="form-label">Resource</label>
+                            <select id="allocation-resource" class="form-select" required>
+                                <option value="">Select Resource</option>
+                                {% for resource in resources %}
+                                <option value="{{ resource.id }}">{{ resource.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="allocation-project" class="form-label">Project</label>
+                            <select id="allocation-project" class="form-select" required>
+                                <option value="">Select Project</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}">{{ project.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="allocation-start-date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="allocation-start-date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="allocation-end-date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="allocation-end-date">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="allocation-utilization" class="form-label">Utilization Percentage</label>
+                            <input type="number" class="form-control" id="allocation-utilization" min="1" max="100" value="100" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="allocation-hours" class="form-label">Hours Allocated</label>
+                            <input type="number" class="form-control" id="allocation-hours" min="0" step="0.5" value="40">
+                        </div>
+                        <div class="col-12">
+                            <label for="allocation-notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="allocation-notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveAllocationBtn">Save Allocation</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Allocation Side Panel -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="editAllocationPanel" aria-labelledby="editAllocationPanelLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="editAllocationPanelLabel">Edit Allocation</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form id="editAllocationForm">
+            <input type="hidden" id="edit-allocation-id">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="edit-allocation-resource" class="form-label">Resource</label>
+                    <input type="text" class="form-control" id="edit-allocation-resource" readonly>
+                </div>
+                <div class="col-12">
+                    <label for="edit-allocation-project" class="form-label">Project</label>
+                    <input type="text" class="form-control" id="edit-allocation-project" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="edit-allocation-start-date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="edit-allocation-start-date" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="edit-allocation-end-date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="edit-allocation-end-date">
+                </div>
+                <div class="col-md-6">
+                    <label for="edit-allocation-utilization" class="form-label">Utilization %</label>
+                    <input type="number" class="form-control" id="edit-allocation-utilization" min="1" max="100" required>
+                    <div id="utilization-warning" class="text-danger mt-1" style="display: none;">
+                        <small><i class="fas fa-exclamation-triangle"></i> Resource is overallocated (>100%)</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="edit-allocation-hours" class="form-label">Hours Allocated</label>
+                    <input type="number" class="form-control" id="edit-allocation-hours" min="0" step="0.5">
+                </div>
+                <div class="col-12">
+                    <label for="edit-allocation-notes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="edit-allocation-notes" rows="3"></textarea>
+                </div>
+                <div class="col-12 mt-3">
+                    <div class="d-grid gap-3">
+                        <button type="button" class="btn btn-primary" id="updateAllocationBtn">
+                            <i class="fas fa-save me-2"></i>Update Allocation
+                        </button>
+                        <button type="button" class="btn btn-danger" id="deleteAllocationBtn">
+                            <i class="fas fa-trash-alt me-2"></i>Delete Allocation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- JSON data for calendar -->
+<script id="calendar-data" type="application/json">
+{{ calendar_data|safe }}
+</script>
+{% endblock %}
+
+{% block scripts %}
+<!-- FullCalendar CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
+
+<!-- Load FullCalendar as a single bundle to avoid import issues -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+
+<script>
+    // Add global error handler for all script errors
+    window.addEventListener('error', function(event) {
+        console.error('Script error caught:', event.error || 'Unknown error');
+        const calendarEl = document.getElementById('timeline-calendar');
+        if (calendarEl) {
+            if (event.error && event.error.message && event.error.message.includes('import')) {
+                calendarEl.innerHTML = '<div class="alert alert-warning">Calendar initialization failed due to module loading issues. Please try using a different browser or contact support.</div>';
+            } else {
+                calendarEl.innerHTML = '<div class="alert alert-danger">An error occurred while loading the calendar. Please refresh the page or contact support.</div>';
+            }
+        }
+    });
+
+    // Add unhandled promise rejection handler
+    window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if FullCalendar is loaded
+        if (typeof FullCalendar === 'undefined') {
+            console.error('FullCalendar is not loaded properly');
+            const calendarEl = document.getElementById('timeline-calendar');
+            if (calendarEl) {
+                calendarEl.innerHTML = '<div class="alert alert-danger">Failed to load calendar. Please refresh the page or contact support.</div>';
+            }
+            return;
+        }
+
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Initialize modals
+        const addAllocationModal = new bootstrap.Modal(document.getElementById('addAllocationModal'));
+        const editAllocationPanel = new bootstrap.Offcanvas(document.getElementById('editAllocationPanel'));
+
+        // Add Allocation button click handler
+        document.getElementById('add-allocation-btn').addEventListener('click', function() {
+            // Set today's date as default start date
+            document.getElementById('allocation-start-date').value = new Date().toISOString().split('T')[0];
+
+            // Set default end date as 30 days from now
+            const defaultEndDate = new Date();
+            defaultEndDate.setDate(defaultEndDate.getDate() + 30);
+            document.getElementById('allocation-end-date').value = defaultEndDate.toISOString().split('T')[0];
+
+            addAllocationModal.show();
+        });
+
+        // Save Allocation button click handler
+        document.getElementById('saveAllocationBtn').addEventListener('click', function() {
+            const resourceId = document.getElementById('allocation-resource').value;
+            const projectId = document.getElementById('allocation-project').value;
+            const startDate = document.getElementById('allocation-start-date').value;
+            const endDate = document.getElementById('allocation-end-date').value;
+            const utilization = document.getElementById('allocation-utilization').value;
+            const hours = document.getElementById('allocation-hours').value;
+            const notes = document.getElementById('allocation-notes').value;
+
+            if (!resourceId || !projectId || !startDate || !utilization) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Create form data for submission
+            const formData = new FormData();
+            formData.append('resource', resourceId);
+            formData.append('start_date', startDate);
+            formData.append('end_date', endDate);
+            formData.append('hours_allocated', hours);
+            formData.append('utilization_percentage', utilization);
+            formData.append('notes', notes);
+
+            // Submit the form using fetch API
+            fetch(`/assign-resource-with-dates/${projectId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Close the modal
+                    addAllocationModal.hide();
+
+                    // Refresh the page to show the new allocation
+                    window.location.reload();
+                } else {
+                    alert(data.error || 'Failed to save allocation');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving the allocation');
+            });
+        });
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize the timeline calendar
+        const calendarEl = document.getElementById('timeline-calendar');
+
+        // Check if calendar element exists before proceeding
+        if (!calendarEl) {
+            console.error('Timeline calendar element not found');
+            return;
+        }
+
+        // Create resources array from the resources data
+        const resourcesData = [];
+
+        // Tables are populated using Django template tags
+
+        // Function to initialize table filters
+        function initializeTableFilters() {
+            console.log('Initializing table filters...');
+
+            // Project Assignments Table Filters
+            const paResourceFilter = document.getElementById('pa-resource-filter');
+            const paProjectFilter = document.getElementById('pa-project-filter');
+            const paStartDateFilter = document.getElementById('pa-start-date-filter');
+            const paEndDateFilter = document.getElementById('pa-end-date-filter');
+            const paUtilizationFilter = document.getElementById('pa-utilization-filter');
+            const paUtilizationValue = document.getElementById('pa-utilization-value');
+            const paResetFilters = document.getElementById('pa-reset-filters');
+
+            // Resource Leaves Table Filters
+            const rlResourceFilter = document.getElementById('rl-resource-filter');
+            const rlLeaveTypeFilter = document.getElementById('rl-leave-type-filter');
+            const rlStartDateFilter = document.getElementById('rl-start-date-filter');
+            const rlEndDateFilter = document.getElementById('rl-end-date-filter');
+            const rlResetFilters = document.getElementById('rl-reset-filters');
+
+            // Update utilization value display
+            if (paUtilizationFilter && paUtilizationValue) {
+                paUtilizationFilter.addEventListener('input', function() {
+                    paUtilizationValue.textContent = this.value + '%';
+                });
+            }
+
+            // Function to filter Project Assignments table
+            function filterProjectAssignments() {
+                const rows = document.querySelectorAll('#project-assignments-table tr');
+                const resourceValue = paResourceFilter ? paResourceFilter.value.toLowerCase() : '';
+                const projectValue = paProjectFilter ? paProjectFilter.value.toLowerCase() : '';
+                const startDateValue = paStartDateFilter ? paStartDateFilter.value : '';
+                const endDateValue = paEndDateFilter ? paEndDateFilter.value : '';
+                const utilizationValue = paUtilizationFilter ? parseInt(paUtilizationFilter.value) : 0;
+
+                // Object to track total utilization by resource
+                const resourceUtilization = {};
+
+                rows.forEach(row => {
+                    const resourceCell = row.cells[0];
+                    const projectCell = row.cells[1];
+                    const startDateCell = row.cells[2];
+                    const endDateCell = row.cells[3];
+                    const utilizationCell = row.cells[4];
+
+                    if (!resourceCell || !projectCell || !startDateCell || !endDateCell || !utilizationCell) {
+                        row.style.display = '';
+                        return;
+                    }
+
+                    const resourceText = resourceCell.textContent.toLowerCase();
+                    const projectText = projectCell.textContent.toLowerCase();
+                    const startDateText = startDateCell.textContent;
+                    const endDateText = endDateCell.textContent;
+                    const utilizationText = utilizationCell.textContent;
+
+                    // Parse utilization percentage from text (remove % sign)
+                    const rowUtilizationValue = parseInt(utilizationText.replace('%', '')) || 0;
+
+                    // Track total utilization by resource
+                    const resourceName = resourceCell.textContent;
+                    if (!resourceUtilization[resourceName]) {
+                        resourceUtilization[resourceName] = 0;
+                    }
+                    resourceUtilization[resourceName] += rowUtilizationValue;
+
+                    // Convert display dates to comparable format
+                    let startDate = null;
+                    let endDate = null;
+                    let filterStartDate = null;
+                    let filterEndDate = null;
+
+                    try {
+                        if (startDateText && startDateText !== 'N/A') {
+                            startDate = new Date(startDateText);
+                        }
+
+                        if (endDateText && endDateText !== 'N/A') {
+                            endDate = new Date(endDateText);
+                        }
+
+                        if (startDateValue) {
+                            filterStartDate = new Date(startDateValue);
+                        }
+
+                        if (endDateValue) {
+                            filterEndDate = new Date(endDateValue);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing dates:', e);
+                    }
+
+                    // Apply filters
+                    let showRow = true;
+
+                    // Resource filter
+                    if (resourceValue && !resourceText.includes(resourceValue)) {
+                        showRow = false;
+                    }
+
+                    // Project filter
+                    if (showRow && projectValue && !projectText.includes(projectValue)) {
+                        showRow = false;
+                    }
+
+                    // Start date filter
+                    if (showRow && filterStartDate && startDate && startDate < filterStartDate) {
+                        showRow = false;
+                    }
+
+                    // End date filter
+                    if (showRow && filterEndDate && endDate && endDate > filterEndDate) {
+                        showRow = false;
+                    }
+
+                    // Utilization filter
+                    if (showRow && utilizationValue > 0 && rowUtilizationValue < utilizationValue) {
+                        showRow = false;
+                    }
+
+                    row.style.display = showRow ? '' : 'none';
+                });
+
+                // Check for overutilized or underutilized resources
+                const messageContainer = document.getElementById('resource-utilization-message');
+                if (messageContainer) {
+                    let overutilizedResources = [];
+                    let underutilizedResources = [];
+
+                    for (const [resource, utilization] of Object.entries(resourceUtilization)) {
+                        if (utilization > 100) {
+                            overutilizedResources.push({ name: resource, utilization: utilization });
+                        } else if (utilization < 50) {
+                            underutilizedResources.push({ name: resource, utilization: utilization });
+                        }
+                    }
+
+                    // Create and display the message
+                    let message = '';
+
+                    if (overutilizedResources.length > 0) {
+                        message += '<div class="alert alert-danger">';
+                        message += '<strong>Overutilized Resources:</strong> ';
+                        message += overutilizedResources.map(r => `${r.name} (${r.utilization}%)`).join(', ');
+                        message += '</div>';
+                    }
+
+                    if (underutilizedResources.length > 0) {
+                        message += '<div class="alert alert-warning">';
+                        message += '<strong>Underutilized Resources:</strong> ';
+                        message += underutilizedResources.map(r => `${r.name} (${r.utilization}%)`).join(', ');
+                        message += '</div>';
+                    }
+
+                    messageContainer.innerHTML = message;
+                }
+
+                // Update the Resource Utilization table
+                updateResourceUtilizationTable(resourceUtilization);
+            }
+
+            // Function to update the Resource Utilization table
+            function updateResourceUtilizationTable(resourceUtilization) {
+                const tableBody = document.querySelector('#resource-utilization-table tbody');
+                if (!tableBody) return;
+
+                // Clear the table
+                tableBody.innerHTML = '';
+
+                // Sort resources by utilization (highest first)
+                const sortedResources = Object.entries(resourceUtilization)
+                    .sort((a, b) => b[1] - a[1]);
+
+                // Add a row for each resource
+                sortedResources.forEach(([resourceName, utilization]) => {
+                    const row = document.createElement('tr');
+
+                    // Determine status and style
+                    let status = '';
+                    let statusClass = '';
+
+                    if (utilization > 100) {
+                        status = 'Overutilized';
+                        statusClass = 'text-danger';
+                    } else if (utilization < 100) {
+                        status = 'Underutilized';
+                        statusClass = 'text-warning';
+                    } else {
+                        status = 'Optimally Utilized';
+                        statusClass = 'text-success';
+                    }
+
+                    // Create the row content
+                    row.innerHTML = `
+                        <td>${resourceName}</td>
+                        <td>${utilization}%</td>
+                        <td class="${statusClass}">${status}</td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+
+                // Add a message if no resources found
+                if (sortedResources.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="3" class="text-center">No resource utilization data available.</td>';
+                    tableBody.appendChild(row);
+                }
+            }
+
+            // Function to filter Resource Leaves table
+            function filterResourceLeaves() {
+                const rows = document.querySelectorAll('#resource-leaves-table tr');
+                const resourceValue = rlResourceFilter ? rlResourceFilter.value.toLowerCase() : '';
+                const leaveTypeValue = rlLeaveTypeFilter ? rlLeaveTypeFilter.value.toLowerCase() : '';
+                const startDateValue = rlStartDateFilter ? rlStartDateFilter.value : '';
+                const endDateValue = rlEndDateFilter ? rlEndDateFilter.value : '';
+
+                rows.forEach(row => {
+                    const resourceCell = row.cells[0];
+                    const leaveTypeCell = row.cells[1];
+                    const startDateCell = row.cells[2];
+                    const endDateCell = row.cells[3];
+
+                    if (!resourceCell || !leaveTypeCell || !startDateCell || !endDateCell) {
+                        row.style.display = '';
+                        return;
+                    }
+
+                    const resourceText = resourceCell.textContent.toLowerCase();
+                    const leaveTypeText = leaveTypeCell.textContent.toLowerCase();
+                    const startDateText = startDateCell.textContent;
+                    const endDateText = endDateCell.textContent;
+
+                    // Convert display dates to comparable format
+                    let startDate = null;
+                    let endDate = null;
+                    let filterStartDate = null;
+                    let filterEndDate = null;
+
+                    try {
+                        if (startDateText && startDateText !== 'N/A') {
+                            startDate = new Date(startDateText);
+                        }
+
+                        if (endDateText && endDateText !== 'N/A') {
+                            endDate = new Date(endDateText);
+                        }
+
+                        if (startDateValue) {
+                            filterStartDate = new Date(startDateValue);
+                        }
+
+                        if (endDateValue) {
+                            filterEndDate = new Date(endDateValue);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing dates:', e);
+                    }
+
+                    // Apply filters
+                    let showRow = true;
+
+                    // Resource filter
+                    if (resourceValue && !resourceText.includes(resourceValue)) {
+                        showRow = false;
+                    }
+
+                    // Leave type filter
+                    if (showRow && leaveTypeValue && !leaveTypeText.includes(leaveTypeValue)) {
+                        showRow = false;
+                    }
+
+                    // Start date filter
+                    if (showRow && filterStartDate && startDate && startDate < filterStartDate) {
+                        showRow = false;
+                    }
+
+                    // End date filter
+                    if (showRow && filterEndDate && endDate && endDate > filterEndDate) {
+                        showRow = false;
+                    }
+
+                    row.style.display = showRow ? '' : 'none';
+                });
+            }
+
+            // Add event listeners for Project Assignments filters
+            if (paResourceFilter) {
+                paResourceFilter.addEventListener('change', filterProjectAssignments);
+            }
+
+            if (paProjectFilter) {
+                paProjectFilter.addEventListener('change', filterProjectAssignments);
+            }
+
+            if (paStartDateFilter) {
+                paStartDateFilter.addEventListener('change', filterProjectAssignments);
+            }
+
+            if (paEndDateFilter) {
+                paEndDateFilter.addEventListener('change', filterProjectAssignments);
+            }
+
+            if (paUtilizationFilter) {
+                paUtilizationFilter.addEventListener('input', filterProjectAssignments);
+            }
+
+            // Add event listeners for Resource Leaves filters
+            if (rlResourceFilter) {
+                rlResourceFilter.addEventListener('change', filterResourceLeaves);
+            }
+
+            if (rlLeaveTypeFilter) {
+                rlLeaveTypeFilter.addEventListener('change', filterResourceLeaves);
+            }
+
+            if (rlStartDateFilter) {
+                rlStartDateFilter.addEventListener('change', filterResourceLeaves);
+            }
+
+            if (rlEndDateFilter) {
+                rlEndDateFilter.addEventListener('change', filterResourceLeaves);
+            }
+
+            // Reset filters functionality
+            if (paResetFilters) {
+                paResetFilters.addEventListener('click', function() {
+                    if (paResourceFilter) paResourceFilter.value = '';
+                    if (paProjectFilter) paProjectFilter.value = '';
+                    if (paStartDateFilter) paStartDateFilter.value = '';
+                    if (paEndDateFilter) paEndDateFilter.value = '';
+                    if (paUtilizationFilter) {
+                        paUtilizationFilter.value = 0;
+                        if (paUtilizationValue) paUtilizationValue.textContent = '0%';
+                    }
+
+                    filterProjectAssignments();
+                });
+            }
+
+            if (rlResetFilters) {
+                rlResetFilters.addEventListener('click', function() {
+                    if (rlResourceFilter) rlResourceFilter.value = '';
+                    if (rlLeaveTypeFilter) rlLeaveTypeFilter.value = '';
+                    if (rlStartDateFilter) rlStartDateFilter.value = '';
+                    if (rlEndDateFilter) rlEndDateFilter.value = '';
+
+                    // Check if there's a search parameter in the URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('search')) {
+                        // Reload the page without the search parameter
+                        window.location.href = window.location.pathname;
+                        return;
+                    }
+
+                    filterResourceLeaves();
+                });
+            }
+
+            // Initialize resource utilization message on page load
+            filterProjectAssignments();
+        }
+
+        // Initialize table filters
+        initializeTableFilters();
+
+        // Add resources from the server data
+        const resourceSelect = document.getElementById('resource-filter-select');
+        if (resourceSelect && resourceSelect.options) {
+            for (let i = 1; i < resourceSelect.options.length; i++) {
+                const option = resourceSelect.options[i];
+                resourcesData.push({
+                    id: option.value,
+                    title: option.text
+                });
+            }
+        }
+
+        // Process calendar data for standard views with better error handling
+        let processedEvents = [];
+        try {
+            // Safely parse the calendar data with fallback to empty array
+            let eventsData = [];
+            try {
+                // Get calendar data from the JSON script tag
+                const calendarDataElement = document.getElementById('calendar-data');
+                if (calendarDataElement) {
+                    eventsData = JSON.parse(calendarDataElement.textContent);
+                } else {
+                    console.warn('Calendar data element not found');
+                }
+            } catch (parseError) {
+                console.error('Error parsing calendar data:', parseError);
+            }
+
+            if (Array.isArray(eventsData)) {
+                processedEvents = eventsData.map(event => {
+                    // Default values if properties are missing
+                    const defaultEvent = {
+                        title: 'Unnamed Event',
+                        start: new Date().toISOString(),
+                        color: '#3788d8',
+                        editable: false,
+                        durationEditable: false,
+                        startEditable: false
+                    };
+
+                    // Merge with actual event data
+                    const mergedEvent = {...defaultEvent, ...event};
+
+                    // Generate a consistent color based on project_id for project events
+                    let color = mergedEvent.color || defaultEvent.color;
+                    if (mergedEvent.extendedProps && mergedEvent.extendedProps.type === 'project' && 
+                        mergedEvent.extendedProps.project_id) {
+                        // Generate a color based on project_id
+                        const projectId = mergedEvent.extendedProps.project_id;
+                        const hue = (projectId * 137) % 360; // Use a prime number to get good distribution
+                        color = `hsl(${hue}, 70%, 50%)`;
+                    }
+
+                    return {
+                        ...mergedEvent,
+                        color: color,
+                        editable: mergedEvent.extendedProps && mergedEvent.extendedProps.type === 'project', 
+                        durationEditable: mergedEvent.extendedProps && mergedEvent.extendedProps.type === 'project',
+                        startEditable: mergedEvent.extendedProps && mergedEvent.extendedProps.type === 'project'
+                    };
+                });
+            } else {
+                console.error('Calendar data is not an array:', eventsData);
+            }
+        } catch (error) {
+            console.error('Error processing calendar data:', error);
+            const calendarEl = document.getElementById('timeline-calendar');
+            if (calendarEl) {
+                calendarEl.innerHTML = '<div class="alert alert-danger">Error processing calendar data. Please refresh the page or contact support.</div>';
+            }
+        }
+
+        // Calculate resource utilization for overallocation warnings
+        const resourceUtilization = {};
+        processedEvents.forEach(event => {
+            if (event.extendedProps && event.extendedProps.type === 'project' && event.extendedProps.resource_id) {
+                const resourceId = event.extendedProps.resource_id.toString();
+                const utilization = event.extendedProps.utilization || 0;
+
+                if (!resourceUtilization[resourceId]) {
+                    resourceUtilization[resourceId] = 0;
+                }
+
+                resourceUtilization[resourceId] += parseFloat(utilization);
+            }
+        });
+
+        // Initialize the calendar with standard views and fallback for plugins
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            // Add fallbacks for missing plugins
+            plugins: FullCalendar.globalPlugins || [],
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: processedEvents, // Use the processed events data
+            editable: true, // Enable drag-and-drop
+            height: 'auto',
+            contentHeight: 'auto',
+            aspectRatio: 1.8,
+            nowIndicator: true,
+            businessHours: {
+                daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
+                startTime: '09:00',
+                endTime: '17:00',
+            },
+            eventDidMount: function(info) {
+                try {
+                    // Add tooltip with allocation info
+                    if (!info || !info.event) return;
+
+                    const event = info.event;
+                    const extendedProps = event.extendedProps || {};
+
+                    if (!extendedProps.type) return;
+
+                    // Safe title parsing with fallbacks
+                    let titleParts = ['Unknown', 'Unknown'];
+                    if (event.title && typeof event.title === 'string') {
+                        titleParts = event.title.split(' - ');
+                        if (titleParts.length < 2) {
+                            titleParts = [event.title, ''];
+                        }
+                    }
+
+                    const resourceName = titleParts[0];
+                    const projectOrLeaveName = titleParts[1];
+
+                    if (extendedProps.type === 'project') {
+                        // Create tooltip content with safe property access
+                        let tooltipContent = `
+                            <strong>Resource:</strong> ${resourceName}<br>
+                            <strong>Project:</strong> ${projectOrLeaveName}<br>
+                            <strong>Dates:</strong> ${event.start ? formatDate(event.start) : 'N/A'} - ${event.end ? formatDate(event.end) : 'Ongoing'}<br>
+                            <strong>Utilization:</strong> ${extendedProps.utilization || 0}%<br>
+                            <strong>Hours:</strong> ${extendedProps.hours || 0}<br>
+                            <strong>Notes:</strong> ${extendedProps.notes || 'None'}
+                        `;
+
+                        // Add warning if resource is overallocated
+                        if (extendedProps.resource_id) {
+                            const resourceId = extendedProps.resource_id.toString();
+                            if (resourceUtilization[resourceId] > 100) {
+                                // Add overallocation indicator to the event
+                                if (info.el) {
+                                    info.el.classList.add('overallocated-resource');
+                                }
+
+                                // Add warning to tooltip
+                                tooltipContent += `<br><strong class="text-danger">Warning:</strong> Resource is overallocated (${resourceUtilization[resourceId].toFixed(1)}%)`;
+                            }
+                        }
+
+                        // Initialize tooltip if element exists
+                        if (info.el && typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                            new bootstrap.Tooltip(info.el, {
+                                title: tooltipContent,
+                                html: true,
+                                placement: 'top',
+                                customClass: 'resource-tooltip'
+                            });
+                        }
+                    } else if (extendedProps.type === 'leave') {
+                        // Create tooltip content for leave with safe property access
+                        let tooltipContent = `
+                            <strong>Resource:</strong> ${resourceName}<br>
+                            <strong>Leave Type:</strong> ${projectOrLeaveName}<br>
+                            <strong>Dates:</strong> ${event.start ? formatDate(event.start) : 'N/A'} - ${event.end ? formatDate(event.end) : 'N/A'}<br>
+                            <strong>Description:</strong> ${extendedProps.description || 'None'}
+                        `;
+
+                        // Initialize tooltip if element exists
+                        if (info.el && typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                            new bootstrap.Tooltip(info.el, {
+                                title: tooltipContent,
+                                html: true,
+                                placement: 'top',
+                                customClass: 'resource-tooltip'
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error in eventDidMount:', error);
+                }
+            },
+            eventContent: function(arg) {
+                try {
+                    // Customize event rendering with proper error handling
+                    if (!arg || !arg.event) {
+                        return { html: '<div class="fc-event-title">Event</div>' };
+                    }
+
+                    const event = arg.event;
+                    const extendedProps = event.extendedProps || {};
+
+                    let content = document.createElement('div');
+                    let titleEl = document.createElement('div');
+                    titleEl.className = 'fc-event-title';
+
+                    // Default title with fallback
+                    let title = 'Unnamed Event';
+                    if (event.title && typeof event.title === 'string') {
+                        title = event.title;
+                    }
+
+                    if (!extendedProps.type) {
+                        // If no type in extended props, just show the title
+                        titleEl.innerHTML = title;
+                        content.appendChild(titleEl);
+                        return { domNodes: [content] };
+                    }
+
+                    if (extendedProps.type === 'project') {
+                        // For project events, show the full title
+                        titleEl.innerHTML = title;
+
+                        // Add utilization info if available
+                        if (extendedProps.utilization !== undefined) {
+                            let utilizationEl = document.createElement('div');
+                            utilizationEl.className = 'resource-utilization';
+                            utilizationEl.innerHTML = extendedProps.utilization + '%';
+                            content.appendChild(utilizationEl);
+                        }
+
+                        content.appendChild(titleEl);
+
+                        // Add overallocation warning if needed
+                        if (extendedProps.resource_id && resourceUtilization) {
+                            const resourceId = extendedProps.resource_id.toString();
+                            if (resourceUtilization[resourceId] && resourceUtilization[resourceId] > 100) {
+                                content.classList.add('overallocated-content');
+                            }
+                        }
+                    } else if (extendedProps.type === 'leave') {
+                        // For leave events, show the full title
+                        titleEl.innerHTML = title;
+                        content.appendChild(titleEl);
+                    } else {
+                        // For any other event type, just show the title
+                        titleEl.innerHTML = title;
+                        content.appendChild(titleEl);
+                    }
+
+                    return { domNodes: [content] };
+                } catch (error) {
+                    console.error('Error in eventContent:', error);
+                    return { html: '<div class="fc-event-title">Error rendering event</div>' };
+                }
+            },
+            eventClick: function(info) {
+                try {
+                    // Handle event click to show/edit allocation details with proper error handling
+                    if (!info || !info.event) {
+                        console.error('Invalid event click info');
+                        return;
+                    }
+
+                    const event = info.event;
+                    const extendedProps = event.extendedProps || {};
+
+                    if (!extendedProps.type) {
+                        // If no type in extended props, just show basic event details
+                        showEventDetails(event);
+                        return;
+                    }
+
+                    if (extendedProps.type === 'project') {
+                        // Open the edit allocation panel
+                        const idField = document.getElementById('edit-allocation-id');
+                        const resourceField = document.getElementById('edit-allocation-resource');
+                        const projectField = document.getElementById('edit-allocation-project');
+                        const startDateField = document.getElementById('edit-allocation-start-date');
+                        const endDateField = document.getElementById('edit-allocation-end-date');
+                        const utilizationField = document.getElementById('edit-allocation-utilization');
+                        const hoursField = document.getElementById('edit-allocation-hours');
+                        const notesField = document.getElementById('edit-allocation-notes');
+                        const utilizationWarning = document.getElementById('utilization-warning');
+
+                        if (!idField || !resourceField || !projectField || !startDateField || 
+                            !endDateField || !utilizationField || !hoursField || !notesField || !utilizationWarning) {
+                            console.error('Missing form fields for edit allocation panel');
+                            return;
+                        }
+
+                        // Set event ID
+                        idField.value = event.id || '';
+
+                        // Handle title parsing safely
+                        let titleParts = ['Unknown', 'Unknown'];
+                        if (event.title && typeof event.title === 'string') {
+                            titleParts = event.title.split(' - ');
+                            if (titleParts.length < 2) {
+                                titleParts = [event.title, ''];
+                            }
+                        }
+
+                        const resourceName = titleParts[0];
+                        const projectName = titleParts[1] || event.title;
+
+                        resourceField.value = resourceName;
+                        projectField.value = projectName;
+
+                        // Set dates with safe access
+                        if (event.start) {
+                            try {
+                                startDateField.value = event.start.toISOString().split('T')[0];
+                            } catch (e) {
+                                console.error('Error formatting start date:', e);
+                                startDateField.value = '';
+                            }
+                        } else {
+                            startDateField.value = '';
+                        }
+
+                        if (event.end) {
+                            try {
+                                endDateField.value = event.end.toISOString().split('T')[0];
+                            } catch (e) {
+                                console.error('Error formatting end date:', e);
+                                endDateField.value = '';
+                            }
+                        } else {
+                            endDateField.value = '';
+                        }
+
+                        // Set other fields with safe access
+                        utilizationField.value = extendedProps.utilization || 0;
+                        hoursField.value = extendedProps.hours || 0;
+                        notesField.value = extendedProps.notes || '';
+
+                        // Show overallocation warning if needed
+                        if (extendedProps.resource_id && resourceUtilization) {
+                            const resourceId = extendedProps.resource_id.toString();
+                            if (resourceUtilization[resourceId] && resourceUtilization[resourceId] > 100) {
+                                utilizationWarning.style.display = 'block';
+                                utilizationWarning.textContent = `Warning: Resource is overallocated (${resourceUtilization[resourceId].toFixed(1)}% across all projects)`;
+                            } else {
+                                utilizationWarning.style.display = 'none';
+                            }
+                        } else {
+                            utilizationWarning.style.display = 'none';
+                        }
+
+                        // Show the panel if it exists
+                        if (typeof editAllocationPanel !== 'undefined' && editAllocationPanel && editAllocationPanel.show) {
+                            editAllocationPanel.show();
+                        } else {
+                            console.error('Edit allocation panel not initialized');
+                        }
+                    } else if (extendedProps.type === 'leave') {
+                        // For leave events, show the event details modal
+                        const modalEl = document.getElementById('eventModal');
+                        const modalTitle = document.getElementById('eventModalLabel');
+                        const modalBody = document.getElementById('eventModalBody');
+                        const editBtn = document.getElementById('editEventBtn');
+                        const deleteBtn = document.getElementById('deleteEventBtn');
+
+                        if (!modalEl || !modalTitle || !modalBody || !editBtn || !deleteBtn) {
+                            console.error('Missing modal elements');
+                            return;
+                        }
+
+                        modalTitle.textContent = event.title || 'Leave Details';
+
+                        // Extract leave ID from the event ID (format: leave_123) with fallback
+                        let leaveId = '0';
+                        if (event.id && typeof event.id === 'string') {
+                            const idParts = event.id.split('_');
+                            if (idParts.length >= 2) {
+                                leaveId = idParts[1] || leaveId;
+                            }
+                        }
+
+                        // Handle title parsing safely
+                        let titleParts = ['Unknown', 'Unknown'];
+                        if (event.title && typeof event.title === 'string') {
+                            titleParts = event.title.split(' - ');
+                            if (titleParts.length < 2) {
+                                titleParts = [event.title, 'Leave'];
+                            }
+                        }
+
+                        const resourceName = titleParts[0];
+                        const leaveType = titleParts[1];
+
+                        modalBody.innerHTML = `
+                            <p><strong>Resource:</strong> ${resourceName}</p>
+                            <p><strong>Leave Type:</strong> ${leaveType}</p>
+                            <p><strong>Start Date:</strong> ${event.start ? formatDate(event.start) : 'N/A'}</p>
+                            <p><strong>End Date:</strong> ${event.end ? formatDate(event.end) : 'N/A'}</p>
+                            <p><strong>Description:</strong> ${extendedProps.description || 'None'}</p>
+                        `;
+
+                        // Set edit and delete links for leave
+                        editBtn.href = `{% url 'resource-leave-update' 0 %}`.replace('/0/', `/${leaveId}/`);
+                        deleteBtn.href = `{% url 'resource-leave-delete' 0 %}`.replace('/0/', `/${leaveId}/`);
+
+                        // Show the modal if it exists
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            const eventModal = new bootstrap.Modal(modalEl);
+                            eventModal.show();
+                        } else {
+                            console.error('Bootstrap Modal not available');
+                        }
+                    } else {
+                        // For any other event type, just show basic event details
+                        showEventDetails(event);
+                    }
+                } catch (error) {
+                    console.error('Error in eventClick:', error);
+                    alert('An error occurred while processing the event. Please try again.');
+                }
+            },
+            eventDrop: function(info) {
+                // Handle event drag to update dates
+                updateAllocationDates(info.event);
+            },
+            eventResize: function(info) {
+                // Handle event resize to update end date
+                updateAllocationDates(info.event);
+            }
+        });
+
+        // Function to update allocation dates after drag or resize
+        function updateAllocationDates(event) {
+            try {
+                if (!event) {
+                    console.warn('No event provided to updateAllocationDates');
+                    return;
+                }
+
+                const extendedProps = event.extendedProps || {};
+
+                if (!extendedProps.type) {
+                    console.warn('Event has no type in extendedProps:', event);
+                    return;
+                }
+
+                if (extendedProps.type === 'project' && extendedProps.project_id && extendedProps.resource_id) {
+                    // Extract project and resource IDs
+                    const projectId = extendedProps.project_id;
+                    const resourceId = extendedProps.resource_id;
+
+                    // Validate start date
+                    if (!event.start) {
+                        console.error('Event has no start date:', event);
+                        alert('Cannot update allocation: Missing start date');
+                        if (typeof event.revert === 'function') {
+                            event.revert();
+                        }
+                        return;
+                    }
+
+                    let startDateStr;
+                    try {
+                        startDateStr = event.start.toISOString().split('T')[0];
+                    } catch (e) {
+                        console.error('Error formatting start date:', e);
+                        alert('Cannot update allocation: Invalid start date');
+                        if (typeof event.revert === 'function') {
+                            event.revert();
+                        }
+                        return;
+                    }
+
+                    // Create form data for submission
+                    const formData = new FormData();
+                    formData.append('resource', resourceId);
+                    formData.append('start_date', startDateStr);
+
+                    if (event.end) {
+                        try {
+                            formData.append('end_date', event.end.toISOString().split('T')[0]);
+                        } catch (e) {
+                            console.error('Error formatting end date:', e);
+                            // Continue without end date
+                        }
+                    }
+
+                    formData.append('hours_allocated', extendedProps.hours || 0);
+                    formData.append('utilization_percentage', extendedProps.utilization || 0);
+                    formData.append('notes', extendedProps.notes || '');
+
+                    // Get CSRF token with error handling
+                    let csrfToken;
+                    try {
+                        csrfToken = getCookie('csrftoken');
+                    } catch (e) {
+                        console.error('Error getting CSRF token:', e);
+                        alert('Cannot update allocation: CSRF token not available');
+                        if (typeof event.revert === 'function') {
+                            event.revert();
+                        }
+                        return;
+                    }
+
+                    // Submit the form using fetch API
+                    fetch(`/assign-resource-with-dates/${projectId}/`, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data || !data.success) {
+                            const errorMsg = data && data.error ? data.error : 'Failed to update allocation';
+                            console.error('Server returned error:', errorMsg);
+                            alert(errorMsg);
+                            // Revert the change
+                            if (typeof event.revert === 'function') {
+                                event.revert();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating allocation:', error);
+                        alert('An error occurred while updating the allocation. Please try again.');
+                        // Revert the change
+                        if (typeof event.revert === 'function') {
+                            event.revert();
+                        }
+                    });
+                } else {
+                    console.warn('Event is not a project or missing required properties:', event);
+                }
+            } catch (error) {
+                console.error('Error in updateAllocationDates:', error);
+                alert('An unexpected error occurred. Please try again.');
+                // Try to revert if possible
+                if (event && typeof event.revert === 'function') {
+                    try {
+                        event.revert();
+                    } catch (revertError) {
+                        console.error('Error reverting event:', revertError);
+                    }
+                }
+            }
+        }
+
+        // Initialize the calendar with improved error handling
+        try {
+            calendar.render();
+            console.log('Calendar rendered successfully');
+
+            // Add a click handler for the calendar tab to ensure calendar is properly rendered when tab is shown
+            const calendarTab = document.getElementById('calendar-tab');
+            if (calendarTab) {
+                calendarTab.addEventListener('shown.bs.tab', function() {
+                    try {
+                        // Force a resize to ensure proper rendering
+                        if (calendar && typeof calendar.updateSize === 'function') {
+                            calendar.updateSize();
+                            console.log('Calendar size updated after tab shown');
+                        }
+                    } catch (tabError) {
+                        console.error('Error updating calendar after tab shown:', tabError);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error rendering calendar:', error);
+            const calendarEl = document.getElementById('timeline-calendar');
+            if (calendarEl) {
+                calendarEl.innerHTML = '<div class="alert alert-danger">Error rendering calendar. Please refresh the page or contact support.</div>';
+            }
+        }
+
+        // Update Allocation button click handler
+        document.getElementById('updateAllocationBtn').addEventListener('click', function() {
+            const eventId = document.getElementById('edit-allocation-id').value;
+            const event = calendar.getEventById(eventId);
+
+            if (!event) {
+                alert('Event not found');
+                return;
+            }
+
+            const extendedProps = event.extendedProps;
+
+            if (!extendedProps) {
+                console.warn('Event has no extendedProps:', event);
+                alert('Cannot update this event: missing required data');
+                return;
+            }
+
+            if (!extendedProps.project_id || !extendedProps.resource_id) {
+                console.warn('Event missing required properties:', event);
+                alert('Cannot update this event: missing project or resource ID');
+                return;
+            }
+
+            const projectId = extendedProps.project_id;
+            const resourceId = extendedProps.resource_id;
+            const startDate = document.getElementById('edit-allocation-start-date').value;
+            const endDate = document.getElementById('edit-allocation-end-date').value;
+            const utilization = document.getElementById('edit-allocation-utilization').value;
+            const hours = document.getElementById('edit-allocation-hours').value;
+            const notes = document.getElementById('edit-allocation-notes').value;
+
+            if (!startDate) {
+                alert('Start date is required');
+                return;
+            }
+
+            // Create form data for submission
+            const formData = new FormData();
+            formData.append('resource', resourceId);
+            formData.append('start_date', startDate);
+            formData.append('end_date', endDate);
+            formData.append('hours_allocated', hours);
+            formData.append('utilization_percentage', utilization);
+            formData.append('notes', notes);
+
+            // Submit the form using fetch API
+            fetch(`/assign-resource-with-dates/${projectId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Close the panel
+                    editAllocationPanel.hide();
+
+                    // Refresh the page to show the updated allocation
+                    window.location.reload();
+                } else {
+                    alert(data.error || 'Failed to update allocation');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the allocation');
+            });
+        });
+
+        // Delete Allocation button click handler
+        document.getElementById('deleteAllocationBtn').addEventListener('click', function() {
+            if (!confirm('Are you sure you want to delete this allocation?')) {
+                return;
+            }
+
+            const eventId = document.getElementById('edit-allocation-id').value;
+            const event = calendar.getEventById(eventId);
+
+            if (!event) {
+                alert('Event not found');
+                return;
+            }
+
+            const extendedProps = event.extendedProps;
+
+            if (!extendedProps) {
+                console.warn('Event has no extendedProps:', event);
+                alert('Cannot delete this event: missing required data');
+                return;
+            }
+
+            if (!extendedProps.project_id || !extendedProps.resource_id) {
+                console.warn('Event missing required properties:', event);
+                alert('Cannot delete this event: missing project or resource ID');
+                return;
+            }
+
+            const projectId = extendedProps.project_id;
+            const resourceId = extendedProps.resource_id;
+
+            // Submit the delete request
+            fetch(`/remove-resource-from-planning/${projectId}/${resourceId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response;
+            })
+            .then(() => {
+                // Close the panel
+                editAllocationPanel.hide();
+
+                // Refresh the page to show the updated allocation
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the allocation');
+            });
+        });
+
+        // Filter handlers
+        document.getElementById('resource-filter-select').addEventListener('change', function() {
+            const resourceId = this.value;
+            filterCalendar('resource', resourceId);
+        });
+
+        document.getElementById('project-filter-select').addEventListener('change', function() {
+            const projectId = this.value;
+            filterCalendar('project', projectId);
+        });
+
+        document.getElementById('department-filter-select').addEventListener('change', function() {
+            const leadId = this.value;
+            filterCalendar('lead', leadId);
+        });
+
+        // Function to filter the calendar for standard views
+        function filterCalendar(filterType, filterId) {
+            if (filterId === 'all') {
+                // Show all events
+                calendar.getEvents().forEach(event => {
+                    event.setProp('display', 'auto');
+                });
+            } else {
+                switch (filterType) {
+                    case 'resource':
+                        // Show only events for the selected resource
+                        calendar.getEvents().forEach(event => {
+                            const extendedProps = event.extendedProps;
+                            if (extendedProps && extendedProps.resource_id && extendedProps.resource_id.toString() === filterId) {
+                                event.setProp('display', 'auto');
+                            } else {
+                                event.setProp('display', 'none');
+                            }
+                        });
+                        break;
+
+                    case 'project':
+                        // Show only events for the selected project
+                        calendar.getEvents().forEach(event => {
+                            const extendedProps = event.extendedProps;
+                            if (extendedProps && extendedProps.type === 'project' && extendedProps.project_id && extendedProps.project_id.toString() === filterId) {
+                                event.setProp('display', 'auto');
+                            } else if (extendedProps && extendedProps.type === 'project') {
+                                event.setProp('display', 'none');
+                            }
+                        });
+                        break;
+
+                    case 'lead':
+                        // For lead filtering, we would need to know which resources belong to which lead
+                        // This would require additional data from the server
+                        // For now, we'll just show a message
+                        console.log('Lead filtering not implemented for standard views');
+                        break;
+                }
+            }
+
+            // Refresh the calendar
+            calendar.render();
+            console.log('Calendar view updated');
+        }
+
+        // View buttons
+        document.getElementById('month-view-btn').addEventListener('click', function() {
+            calendar.changeView('dayGridMonth');
+            setActiveButton('month-view-btn');
+        });
+
+        document.getElementById('week-view-btn').addEventListener('click', function() {
+            calendar.changeView('timeGridWeek');
+            setActiveButton('week-view-btn');
+        });
+
+        document.getElementById('day-view-btn').addEventListener('click', function() {
+            calendar.changeView('timeGridDay');
+            setActiveButton('day-view-btn');
+        });
+
+        function setActiveButton(buttonId) {
+            // Safely remove active class from all buttons
+            const buttons = document.querySelectorAll('.btn-group .btn');
+            if (buttons && buttons.length > 0) {
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+            }
+
+            // Safely add active class to the clicked button
+            const activeButton = document.getElementById(buttonId);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        // Helper function to format dates with error handling
+        function formatDate(dateStr) {
+            try {
+                if (!dateStr) {
+                    return 'N/A';
+                }
+
+                const date = new Date(dateStr);
+
+                // Check if date is valid
+                if (isNaN(date.getTime())) {
+                    console.warn('Invalid date:', dateStr);
+                    return 'Invalid date';
+                }
+
+                return date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            } catch (error) {
+                console.error('Error formatting date:', error, dateStr);
+                return 'Error formatting date';
+            }
+        }
+    });
+</script>
+<style>
+    /* Calendar and Event Styling */
+    .fc-event {
+        border-radius: var(--border-radius);
+        padding: 0.25rem 0.5rem;
+        margin-bottom: 0.25rem;
+        font-size: 0.85rem;
+        box-shadow: var(--box-shadow);
+        transition: all 0.2s ease;
+    }
+
+    .fc-event:hover {
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .fc-timeline-event {
+        padding: 0.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .fc-timeline-event:hover {
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+        z-index: 10;
+    }
+
+    .fc-timeline-event .fc-event-title {
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .fc-timeline-event .fc-event-time {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+    /* Utilization percentage display */
+    .resource-utilization {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        background-color: rgba(255, 255, 255, 0.8);
+        color: #333;
+        border-radius: calc(var(--border-radius) / 2);
+        padding: 0.125rem 0.375rem;
+        display: inline-block;
+        font-weight: 600;
+    }
+
+    /* Resource cell styling */
+    .fc-resource-cell {
+        font-weight: 600;
+        padding: 0.75rem !important;
+        background-color: var(--light-color);
+        border-right: 2px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .fc-datagrid-cell-cushion {
+        padding: 0.75rem !important;
+    }
+
+    /* Header styling */
+    .fc-col-header-cell {
+        background-color: var(--light-color);
+        font-weight: 600;
+    }
+
+    /* Grid styling */
+    .fc-scrollgrid {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--box-shadow);
+    }
+
+    .fc-theme-standard .fc-scrollgrid {
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Resource label styling */
+    .resource-label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    /* Event type styling */
+    .resource-event {
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        margin: 0.125rem 0;
+    }
+
+    .project-event {
+        background-color: var(--primary-color) !important;
+        border-color: rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .leave-event {
+        background-color: var(--danger-color) !important;
+        border-color: rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Overallocation warning styling */
+    .overallocated-resource {
+        border: 2px solid var(--danger-color) !important;
+        animation: pulse-warning 2s infinite;
+    }
+
+    .overallocated-content {
+        position: relative;
+    }
+
+    .overallocated-content::after {
+        content: "⚠️";
+        position: absolute;
+        top: 0.125rem;
+        right: 0.125rem;
+        font-size: 0.75rem;
+    }
+
+    @keyframes pulse-warning {
+        0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+        70% { box-shadow: 0 0 0 0.375rem rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+
+    /* Timeline specific styles */
+    .fc-timeline-slot-frame {
+        border-left: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .fc-timeline-slot.fc-day-today .fc-timeline-slot-frame {
+        background-color: rgba(var(--warning-color-rgb, 255, 193, 7), 0.15);
+    }
+
+    .fc-timeline-now-indicator-line {
+        border-color: var(--danger-color);
+        border-width: 2px;
+    }
+
+    .fc-timeline-now-indicator-arrow {
+        border-color: var(--danger-color);
+        border-top-color: transparent;
+        border-bottom-color: transparent;
+    }
+
+    /* Business hours */
+    .fc-non-business {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    /* Tooltip styling */
+    .resource-tooltip {
+        max-width: 300px !important;
+    }
+
+    .tooltip-inner {
+        max-width: 300px !important;
+        padding: 0.75rem !important;
+        text-align: left !important;
+        box-shadow: var(--box-shadow);
+    }
+
+    /* Tab styling */
+    .nav-tabs {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .nav-tabs .nav-link {
+        font-weight: 500;
+        padding: 0.75rem 1.25rem;
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: var(--secondary-color);
+        transition: all 0.2s;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+        border-bottom-color: rgba(0, 123, 255, 0.3);
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        border-bottom: 3px solid var(--primary-color);
+        font-weight: 600;
+    }
+
+    /* Side panel styling */
+    .offcanvas {
+        width: 100% !important;
+        max-width: 400px;
+        box-shadow: -0.25rem 0 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    /* Filter section styling */
+    .filter-section {
+        background-color: var(--light-color);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 1rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    /* Resource Planning specific styles */
+    .resource-planning-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .resource-planning-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .table-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .table-card .card-body {
+        flex: 1;
+        overflow: auto;
+    }
+
+    .calendar-container {
+        height: 600px;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--box-shadow);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 991.98px) {
+        .fc-toolbar {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .fc-toolbar-chunk {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .fc-toolbar-chunk .btn-group {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .fc-toolbar-chunk .btn {
+            flex: 1;
+        }
+
+        .fc-resource-cell {
+            max-width: 120px;
+        }
+
+        #timeline-calendar {
+            height: 500px !important;
+        }
+
+        .resource-planning-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        .resource-planning-actions {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .resource-planning-actions .btn {
+            flex: 1;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .nav-tabs .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .card-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .table th, .table td {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+        }
+
+        #timeline-calendar {
+            height: 400px !important;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .table-responsive {
+            margin-bottom: 0;
+        }
+
+        .table th, .table td {
+            padding: 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-sm {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.7rem;
+        }
+
+        .card-header h5 {
+            font-size: 1rem;
+        }
+
+        #timeline-calendar {
+            height: 350px !important;
+        }
+
+        .dropdown-menu {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize calendar with improved layout
+        const calendarEl = document.getElementById('calendar');
+
+        // Check if calendar element exists before proceeding
+        if (!calendarEl) {
+            console.error('Calendar element not found');
+            return;
+        }
+
+        // Create resources array from the select options
+        const resourceSelect = document.getElementById('resource-select');
+
+        // Check if resource select element exists before proceeding
+        if (!resourceSelect) {
+            console.error('Resource select element not found');
+            return;
+        }
+
+        const resourcesData = [];
+
+        for (let i = 1; i < resourceSelect.options.length; i++) {
+            const option = resourceSelect.options[i];
+            resourcesData.push({
+                id: option.value,
+                title: option.text
+            });
+        }
+
+        // Check if FullCalendar and Scheduler are loaded
+        if (typeof FullCalendar === 'undefined') {
+            console.error('FullCalendar is not loaded properly');
+            return;
+        }
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth', // Start with the most basic view
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            // Standard options for basic views
+            height: 600,
+            aspectRatio: 1.8,
+            nowIndicator: true,
+            businessHours: {
+                daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
+                startTime: '09:00',
+                endTime: '17:00',
+            },
+            slotLabelFormat: {
+                month: { day: 'numeric' },
+                week: { weekday: 'short', day: 'numeric' },
+                day: { hour: 'numeric', minute: '2-digit', hour12: true }
+            },
+            eventClassNames: function(arg) {
+                // Add custom classes based on event type
+                return [
+                    arg.event.extendedProps.type === 'project' ? 'project-event' : 'leave-event',
+                    'resource-event'
+                ];
+            },
+            events: function(info, successCallback, failureCallback) {
+                // Use the events directly without resource assignment
+                const eventsData = JSON.parse(document.getElementById('calendar-data').textContent);
+                successCallback(eventsData);
+            },
+            eventClick: function(info) {
+                showEventDetails(info.event);
+            },
+            eventContent: function(arg) {
+                let content = document.createElement('div');
+                let titleEl = document.createElement('div');
+                titleEl.className = 'fc-event-title';
+
+                // Display the full title
+                titleEl.innerHTML = arg.event.title;
+                content.appendChild(titleEl);
+
+                // Add utilization info for project events
+                if (arg.event.extendedProps && arg.event.extendedProps.type === 'project' && arg.event.extendedProps.utilization) {
+                    let utilizationEl = document.createElement('div');
+                    utilizationEl.className = 'resource-utilization';
+                    utilizationEl.innerHTML = arg.event.extendedProps.utilization + '% allocation';
+                    content.appendChild(utilizationEl);
+                }
+
+                return { domNodes: [content] };
+            }
+        });
+        // Safely render the calendar with error handling
+        try {
+            calendar.render();
+            console.log('Calendar rendered successfully');
+        } catch (error) {
+            console.error('Error rendering calendar:', error);
+            if (calendarEl) {
+                calendarEl.innerHTML = '<div class="alert alert-danger">Error rendering calendar. Please try again or contact support.</div>';
+            }
+        }
+
+        // View buttons - add checks to ensure elements exist
+        const monthViewBtn = document.getElementById('month-view-btn');
+        if (monthViewBtn) {
+            monthViewBtn.addEventListener('click', function() {
+                calendar.changeView('dayGridMonth');
+                setActiveButton('month-view-btn');
+            });
+        }
+
+        const weekViewBtn = document.getElementById('week-view-btn');
+        if (weekViewBtn) {
+            weekViewBtn.addEventListener('click', function() {
+                calendar.changeView('timeGridWeek');
+                setActiveButton('week-view-btn');
+            });
+        }
+
+        const dayViewBtn = document.getElementById('day-view-btn');
+        if (dayViewBtn) {
+            dayViewBtn.addEventListener('click', function() {
+                calendar.changeView('timeGridDay');
+                setActiveButton('day-view-btn');
+            });
+        }
+
+        // All resources button - add check to ensure element exists
+        const viewAllBtn = document.getElementById('view-all-btn');
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener('click', function() {
+                const resourceSelect = document.getElementById('resource-select');
+                if (resourceSelect) {
+                    resourceSelect.value = 'all';
+                    showAllResources();
+                }
+            });
+        }
+
+        function setActiveButton(buttonId) {
+            // Safely remove active class from all buttons
+            const buttons = document.querySelectorAll('.btn-group .btn');
+            if (buttons && buttons.length > 0) {
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+            }
+
+            // Safely add active class to the clicked button
+            const activeButton = document.getElementById(buttonId);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        // Resource filter - add check to ensure element exists
+        const resourceSelectFilter = document.getElementById('resource-select');
+        if (resourceSelectFilter) {
+            resourceSelectFilter.addEventListener('change', function() {
+                const resourceId = this.value;
+                if (resourceId === 'all') {
+                    showAllResources();
+                } else {
+                    filterToSingleResource(resourceId);
+                }
+            });
+        }
+
+        function showAllResources() {
+            console.log('Showing all resources');
+
+            // Show all events
+            const events = calendar.getEvents();
+            console.log('Total events to display:', events.length);
+
+            events.forEach(event => {
+                event.setProp('display', 'auto');
+
+                // Log event details for debugging
+                if (event.extendedProps && event.extendedProps.resource_id) {
+                    console.log('Setting display:auto for event:', event.title, 'Resource ID:', event.extendedProps.resource_id);
+                }
+            });
+
+            // Refresh the view without refetching to preserve the display property
+            calendar.updateSize();
+            console.log('Calendar view updated');
+        }
+
+        function filterToSingleResource(resourceId) {
+            console.log('Filtering to resource ID:', resourceId);
+
+            // Show only events for the selected resource
+            const events = calendar.getEvents();
+            console.log('Total events:', events.length);
+
+            let matchCount = 0;
+            events.forEach(event => {
+                // Check if extendedProps exists and has resource_id
+                if (event.extendedProps && event.extendedProps.resource_id) {
+                    console.log('Event resource_id:', event.extendedProps.resource_id, 'Event title:', event.title);
+
+                    if (event.extendedProps.resource_id.toString() === resourceId.toString()) {
+                        event.setProp('display', 'auto');
+                        matchCount++;
+                    } else {
+                        event.setProp('display', 'none');
+                    }
+                } else {
+                    console.warn('Event missing resource_id:', event);
+                    event.setProp('display', 'none');
+                }
+            });
+
+            console.log('Events matching resource ID ' + resourceId + ':', matchCount);
+
+            // Refresh the view without refetching to preserve the display property
+            calendar.updateSize();
+        }
+
+        // Tables are now populated directly using Django template tags
+
+        function populateProjectAssignmentsTable() {
+            const tableBody = document.getElementById('project-assignments-table');
+            if (!tableBody) {
+                console.error('Project assignments table body not found');
+                return;
+            }
+
+            tableBody.innerHTML = '';
+
+            try {
+                // Get calendar data and handle potential JSON parsing issues
+                let events = [];
+                try {
+                    const calendarDataStr = document.getElementById('calendar-data').textContent;
+                    console.log('Calendar data string length:', calendarDataStr.length);
+                    console.log('Calendar data string (first 100 chars):', calendarDataStr.substring(0, 100));
+
+                    if (calendarDataStr.trim() === '') {
+                        console.error('Calendar data is empty');
+                        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No data available. Please refresh the page.</td></tr>';
+                        return;
+                    }
+
+                    try {
+                        events = JSON.parse(calendarDataStr);
+                        console.log('Successfully parsed calendar data, found', events.length, 'events');
+                        console.log('First event sample:', events.length > 0 ? JSON.stringify(events[0]) : 'No events');
+                    } catch (parseError) {
+                        console.error('JSON parse error:', parseError);
+                        console.error('Invalid JSON data (first 100 chars):', calendarDataStr.substring(0, 100));
+                        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Error parsing data. Please refresh the page.</td></tr>';
+                        return;
+                    }
+                } catch (jsonError) {
+                    console.error('Error accessing calendar data:', jsonError);
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Error accessing data. Please refresh the page.</td></tr>';
+                    return;
+                }
+
+                if (!Array.isArray(events)) {
+                    console.error('Calendar data is not an array, got:', typeof events);
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Error loading data. Please refresh the page.</td></tr>';
+                    return;
+                }
+
+                // Filter for project events with proper null checks
+                const projectEvents = events.filter(event => 
+                    event && event.extendedProps && event.extendedProps.type === 'project'
+                );
+
+                if (projectEvents.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No project assignments found.</td></tr>';
+                    return;
+                }
+
+                projectEvents.forEach(event => {
+                    try {
+                        const row = document.createElement('tr');
+
+                        // Get resource and project names from the title with fallbacks
+                        let resourceName = 'Unknown Resource';
+                        let projectName = 'Unknown Project';
+
+                        if (event.title) {
+                            const titleParts = event.title.split(' - ');
+                            if (titleParts.length >= 2) {
+                                resourceName = titleParts[0] || resourceName;
+                                projectName = titleParts[1] || projectName;
+                            } else {
+                                // If title doesn't have the expected format, use the whole title as project name
+                                projectName = event.title;
+                            }
+                        }
+
+                        // Safe access to properties with fallbacks
+                        const utilization = event.extendedProps && event.extendedProps.utilization !== undefined 
+                            ? event.extendedProps.utilization 
+                            : 0;
+
+                        const projectId = event.extendedProps && event.extendedProps.project_id 
+                            ? event.extendedProps.project_id 
+                            : 0;
+
+                        const resourceId = event.extendedProps && event.extendedProps.resource_id 
+                            ? event.extendedProps.resource_id 
+                            : 0;
+
+                        row.innerHTML = `
+                            <td>${resourceName}</td>
+                            <td>${projectName}</td>
+                            <td>${event.start ? formatDate(event.start) : 'N/A'}</td>
+                            <td>${event.end ? formatDate(event.end) : 'N/A'}</td>
+                            <td>${utilization}%</td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-info view-event" data-event-id="${event.id || ''}">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'edit-resource-allocation' 0 0 %}"
+                                   class="btn btn-sm btn-warning"
+                                   data-project-id="${projectId}"
+                                   data-resource-id="${resourceId}">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'remove-resource-from-planning' 0 0 %}"
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Are you sure you want to remove this assignment?');"
+                                   data-project-id="${projectId}"
+                                   data-resource-id="${resourceId}">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        `;
+
+                        tableBody.appendChild(row);
+                    } catch (rowError) {
+                        console.error('Error creating row for event:', event, rowError);
+                    }
+                });
+
+                // Fix the edit and remove links with correct IDs
+                document.querySelectorAll('[data-project-id]').forEach(link => {
+                    try {
+                        const projectId = link.getAttribute('data-project-id');
+                        const resourceId = link.getAttribute('data-resource-id');
+                        if (projectId && resourceId) {
+                            link.href = link.href.replace('/0/0/', `/${projectId}/${resourceId}/`);
+                        }
+                    } catch (linkError) {
+                        console.error('Error updating link:', link, linkError);
+                    }
+                });
+            } catch (error) {
+                console.error('Error populating project assignments table:', error);
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Error loading data. Please refresh the page.</td></tr>';
+            }
+        }
+
+        function populateResourceLeavesTable() {
+            const tableBody = document.getElementById('resource-leaves-table');
+            if (!tableBody) {
+                console.error('Resource leaves table body not found');
+                return;
+            }
+
+            tableBody.innerHTML = '';
+
+            try {
+                // Get calendar data and handle potential JSON parsing issues
+                let events = [];
+                try {
+                    const calendarDataStr = document.getElementById('calendar-data').textContent;
+                    console.log('Calendar data string length for leaves table:', calendarDataStr.length);
+                    console.log('Calendar data string for leaves table (first 100 chars):', calendarDataStr.substring(0, 100));
+
+                    if (calendarDataStr.trim() === '') {
+                        console.error('Calendar data is empty for leaves table');
+                        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No data available. Please refresh the page.</td></tr>';
+                        return;
+                    }
+
+                    try {
+                        events = JSON.parse(calendarDataStr);
+                        console.log('Successfully parsed calendar data for leaves table, found', events.length, 'events');
+                        console.log('First event sample for leaves table:', events.length > 0 ? JSON.stringify(events[0]) : 'No events');
+                    } catch (parseError) {
+                        console.error('JSON parse error for leaves table:', parseError);
+                        console.error('Invalid JSON data for leaves table (first 100 chars):', calendarDataStr.substring(0, 100));
+                        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error parsing data. Please refresh the page.</td></tr>';
+                        return;
+                    }
+                } catch (jsonError) {
+                    console.error('Error accessing calendar data for leaves table:', jsonError);
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error accessing data. Please refresh the page.</td></tr>';
+                    return;
+                }
+
+                if (!Array.isArray(events)) {
+                    console.error('Calendar data is not an array for leaves table, got:', typeof events);
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error loading data. Please refresh the page.</td></tr>';
+                    return;
+                }
+
+                // Filter for leave events with proper null checks
+                const leaveEvents = events.filter(event => 
+                    event && event.extendedProps && event.extendedProps.type === 'leave'
+                );
+
+                if (leaveEvents.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No resource leaves found.</td></tr>';
+                    return;
+                }
+
+                leaveEvents.forEach(event => {
+                    try {
+                        const row = document.createElement('tr');
+
+                        // Get resource name and leave type from the title with fallbacks
+                        let resourceName = 'Unknown Resource';
+                        let leaveType = 'Unknown Leave Type';
+
+                        if (event.title) {
+                            const titleParts = event.title.split(' - ');
+                            if (titleParts.length >= 2) {
+                                resourceName = titleParts[0] || resourceName;
+                                leaveType = titleParts[1] || leaveType;
+                            } else {
+                                // If title doesn't have the expected format, use the whole title
+                                leaveType = event.title;
+                            }
+                        }
+
+                        // Extract leave ID from the event ID (format: leave_123) with fallback
+                        let leaveId = '0';
+                        if (event.id && typeof event.id === 'string') {
+                            const idParts = event.id.split('_');
+                            if (idParts.length >= 2) {
+                                leaveId = idParts[1] || leaveId;
+                            }
+                        }
+
+                        row.innerHTML = `
+                            <td>${resourceName}</td>
+                            <td>${leaveType}</td>
+                            <td>${event.start ? formatDate(event.start) : 'N/A'}</td>
+                            <td>${event.end ? formatDate(event.end) : 'N/A'}</td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-info view-event" data-event-id="${event.id || ''}">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'resource-leave-update' 0 %}" class="btn btn-sm btn-warning" data-leave-id="${leaveId}">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'resource-leave-delete' 0 %}" class="btn btn-sm btn-danger" data-leave-id="${leaveId}">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        `;
+
+                        tableBody.appendChild(row);
+                    } catch (rowError) {
+                        console.error('Error creating row for leave event:', event, rowError);
+                    }
+                });
+
+                // Fix the edit and delete links with correct IDs
+                document.querySelectorAll('[data-leave-id]').forEach(link => {
+                    try {
+                        const leaveId = link.getAttribute('data-leave-id');
+                        if (leaveId) {
+                            link.href = link.href.replace('/0/', `/${leaveId}/`);
+                        }
+                    } catch (linkError) {
+                        console.error('Error updating leave link:', link, linkError);
+                    }
+                });
+            } catch (error) {
+                console.error('Error populating resource leaves table:', error);
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error loading data. Please refresh the page.</td></tr>';
+            }
+        }
+
+        // Event details modal with improved error handling
+        function showEventDetails(event) {
+            try {
+                if (!event) {
+                    console.error('No event provided to showEventDetails');
+                    return;
+                }
+
+                // Get all required DOM elements with error checking
+                const modalEl = document.getElementById('eventModal');
+                const modalBodyEl = document.getElementById('eventModalBody');
+                const editBtnEl = document.getElementById('editEventBtn');
+                const deleteBtnEl = document.getElementById('deleteEventBtn');
+                const modalLabelEl = document.getElementById('eventModalLabel');
+
+                if (!modalEl || !modalBodyEl || !editBtnEl || !deleteBtnEl || !modalLabelEl) {
+                    console.error('Modal elements not found');
+                    return;
+                }
+
+                // Check if bootstrap is available
+                if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+                    console.error('Bootstrap Modal not available');
+                    alert('Error: Bootstrap Modal component is not available. Please refresh the page.');
+                    return;
+                }
+
+                const modal = new bootstrap.Modal(modalEl);
+
+                // Set modal title with fallback
+                modalLabelEl.textContent = event.title || 'Event Details';
+
+                // Default display for buttons
+                editBtnEl.style.display = 'inline-block';
+                deleteBtnEl.style.display = 'inline-block';
+
+                // Prepare content based on event type
+                let content = '';
+
+                // Safe access to extendedProps
+                const extendedProps = event.extendedProps || {};
+                const eventType = extendedProps.type || 'unknown';
+
+                // Safe date formatting function
+                const safeFormatDate = (dateObj) => {
+                    if (!dateObj) return 'N/A';
+                    try {
+                        return formatDate(dateObj);
+                    } catch (e) {
+                        console.error('Error formatting date:', e);
+                        return 'Invalid date';
+                    }
+                };
+
+                if (eventType === 'project') {
+                    // Safe title parsing with fallbacks
+                    let resourceName = 'Unknown Resource';
+                    let projectName = 'Unknown Project';
+
+                    if (event.title && typeof event.title === 'string') {
+                        const titleParts = event.title.split(' - ');
+                        if (titleParts.length >= 2) {
+                            resourceName = titleParts[0] || resourceName;
+                            projectName = titleParts[1] || projectName;
+                        } else {
+                            projectName = event.title;
+                        }
+                    }
+
+                    // Safe property access with fallbacks
+                    const utilization = extendedProps.utilization !== undefined ? extendedProps.utilization : 0;
+                    const hours = extendedProps.hours !== undefined ? extendedProps.hours : 0;
+                    const notes = extendedProps.notes || 'None';
+                    const projectId = extendedProps.project_id || 0;
+                    const resourceId = extendedProps.resource_id || 0;
+
+                    content = `
+                        <p><strong>Resource:</strong> ${resourceName}</p>
+                        <p><strong>Project:</strong> ${projectName}</p>
+                        <p><strong>Start Date:</strong> ${safeFormatDate(event.start)}</p>
+                        <p><strong>End Date:</strong> ${event.end ? safeFormatDate(event.end) : 'Not specified'}</p>
+                        <p><strong>Utilization:</strong> ${utilization}%</p>
+                        <p><strong>Hours Allocated:</strong> ${hours}</p>
+                        <p><strong>Notes:</strong> ${notes}</p>
+                    `;
+
+                    // Set edit and delete links for project assignment
+                    try {
+                        editBtnEl.href = `{% url 'edit-resource-allocation' 0 0 %}`.replace('/0/0/', `/${projectId}/${resourceId}/`);
+                        deleteBtnEl.href = `{% url 'remove-resource-from-planning' 0 0 %}`.replace('/0/0/', `/${projectId}/${resourceId}/`);
+                    } catch (e) {
+                        console.error('Error setting edit/delete links:', e);
+                        editBtnEl.href = '#';
+                        deleteBtnEl.href = '#';
+                    }
+                } else {
+                    // Safe title parsing with fallbacks
+                    let resourceName = 'Unknown Resource';
+                    let leaveType = 'Unknown Leave Type';
+
+                    if (event.title && typeof event.title === 'string') {
+                        const titleParts = event.title.split(' - ');
+                        if (titleParts.length >= 2) {
+                            resourceName = titleParts[0] || resourceName;
+                            leaveType = titleParts[1] || leaveType;
+                        } else {
+                            leaveType = event.title;
+                        }
+                    }
+
+                    // Extract leave ID from the event ID (format: leave_123) with fallback
+                    let leaveId = '0';
+                    if (event.id && typeof event.id === 'string') {
+                        const idParts = event.id.split('_');
+                        if (idParts.length >= 2) {
+                            leaveId = idParts[1] || leaveId;
+                        }
+                    }
+
+                    // Safe property access with fallback
+                    const description = extendedProps.description || 'None';
+
+                    content = `
+                        <p><strong>Resource:</strong> ${resourceName}</p>
+                        <p><strong>Leave Type:</strong> ${leaveType}</p>
+                        <p><strong>Start Date:</strong> ${safeFormatDate(event.start)}</p>
+                        <p><strong>End Date:</strong> ${safeFormatDate(event.end)}</p>
+                        <p><strong>Description:</strong> ${description}</p>
+                    `;
+
+                    // Set edit and delete links for leave
+                    try {
+                        editBtnEl.href = `{% url 'resource-leave-update' 0 %}`.replace('/0/', `/${leaveId}/`);
+                        deleteBtnEl.href = `{% url 'resource-leave-delete' 0 %}`.replace('/0/', `/${leaveId}/`);
+                    } catch (e) {
+                        console.error('Error setting leave edit/delete links:', e);
+                        editBtnEl.href = '#';
+                        deleteBtnEl.href = '#';
+                    }
+                }
+
+                // Set content and show modal
+                try {
+                    modalBodyEl.innerHTML = content;
+                    modal.show();
+                } catch (e) {
+                    console.error('Error showing modal:', e);
+                    alert('Error showing event details. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error showing event details:', error);
+                alert('An error occurred while showing event details. Please try again.');
+            }
+        }
+
+        // Add event listeners for view buttons in tables with error handling
+        document.addEventListener('click', function(e) {
+            try {
+                if (e.target && e.target.closest && e.target.closest('.view-event')) {
+                    e.preventDefault();
+                    const viewEventEl = e.target.closest('.view-event');
+
+                    if (!viewEventEl) {
+                        console.warn('View event element not found');
+                        return;
+                    }
+
+                    const eventId = viewEventEl.getAttribute('data-event-id');
+
+                    if (!eventId) {
+                        console.warn('No event ID found in view event element');
+                        return;
+                    }
+
+                    // Skip calendar check and directly try to create a mock event from table data
+                    console.log('Processing event with ID:', eventId);
+
+                    // Extract event type and ID from the eventId string
+                    const [eventType, eventIdNum] = eventId.split('_');
+
+                    // Try to find the event in the calendar if it's available
+                    let event = null;
+                    if (typeof calendar !== 'undefined' && typeof calendar.getEventById === 'function') {
+                        event = calendar.getEventById(eventId);
+                    }
+
+                    if (event) {
+                        showEventDetails(event);
+                    } else {
+                        console.warn('Event not found in calendar with ID:', eventId);
+
+                        if (eventType === 'project' && eventIdNum) {
+                            // Find the project resource in the table
+                            const projectRow = document.querySelector(`#project-assignments-table tr a[data-event-id="project_${eventIdNum}"]`);
+                            if (projectRow) {
+                                const row = projectRow.closest('tr');
+                                const cells = row.querySelectorAll('td');
+
+                                if (cells.length >= 5) {
+                                    // Create a mock event object with the data from the table
+                                    const mockEvent = {
+                                        id: eventId,
+                                        title: `${cells[0].textContent} - ${cells[1].textContent}`,
+                                        start: cells[2].textContent,
+                                        end: cells[3].textContent,
+                                        extendedProps: {
+                                            type: 'project',
+                                            utilization: parseInt(cells[4].textContent),
+                                            project_id: eventIdNum,
+                                            resource_id: eventIdNum // This is not correct, but we'll fix it below
+                                        }
+                                    };
+
+                                    // Extract resource ID from the edit link
+                                    const editLink = row.querySelector('a.btn-warning');
+                                    if (editLink && editLink.href) {
+                                        const urlParts = editLink.href.split('/');
+                                        if (urlParts.length >= 2) {
+                                            mockEvent.extendedProps.resource_id = urlParts[urlParts.length - 1];
+                                        }
+                                    }
+
+                                    showEventDetails(mockEvent);
+                                    return;
+                                }
+                            }
+                        } else if (eventType === 'leave' && eventIdNum) {
+                            // Find the leave in the table
+                            const leaveRow = document.querySelector(`#resource-leaves-table tr a[data-event-id="leave_${eventIdNum}"]`);
+                            if (leaveRow) {
+                                const row = leaveRow.closest('tr');
+                                const cells = row.querySelectorAll('td');
+
+                                if (cells.length >= 4) {
+                                    // Create a mock event object with the data from the table
+                                    const mockEvent = {
+                                        id: eventId,
+                                        title: `${cells[0].textContent} - ${cells[1].textContent}`,
+                                        start: cells[2].textContent,
+                                        end: cells[3].textContent,
+                                        extendedProps: {
+                                            type: 'leave',
+                                            leave_id: eventIdNum
+                                        }
+                                    };
+
+                                    showEventDetails(mockEvent);
+                                    return;
+                                }
+                            }
+                        }
+
+                        // If we couldn't create a mock event, show an error
+                        alert('Could not find event details. Please try refreshing the page.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error handling view event click:', error);
+            }
+        });
+
+        // Helper function to format dates with error handling
+        function formatDate(dateStr) {
+            try {
+                if (!dateStr) {
+                    return 'N/A';
+                }
+
+                const date = new Date(dateStr);
+
+                // Check if date is valid
+                if (isNaN(date.getTime())) {
+                    console.warn('Invalid date:', dateStr);
+                    return 'Invalid date';
+                }
+
+                return date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            } catch (error) {
+                console.error('Error formatting date:', error, dateStr);
+                return 'Error formatting date';
+            }
+        }
+    });
+</script>
+{% endblock %}

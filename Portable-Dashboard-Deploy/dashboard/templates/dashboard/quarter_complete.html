@@ -1,0 +1,130 @@
+{% extends 'dashboard/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Complete Quarter: {{ quarter }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Complete Quarter: {{ quarter }}</h1>
+        <div>
+            <a href="{% url 'quarter-detail' quarter.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Quarter
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Quarter Completion Form</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6>Quarter Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="{{ quarter_form.completion_date.id_for_label }}" class="form-label">Completion Date</label>
+                                            {{ quarter_form.completion_date|add_class:"form-control" }}
+                                            {% if quarter_form.completion_date.errors %}
+                                            <div class="text-danger">
+                                                {{ quarter_form.completion_date.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="{{ quarter_form.completion_notes.id_for_label }}" class="form-label">Completion Notes</label>
+                                            {{ quarter_form.completion_notes|add_class:"form-control" }}
+                                            {% if quarter_form.completion_notes.errors %}
+                                            <div class="text-danger">
+                                                {{ quarter_form.completion_notes.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3 form-check">
+                                            {{ quarter_form.completed|add_class:"form-check-input" }}
+                                            <label for="{{ quarter_form.completed.id_for_label }}" class="form-check-label">Mark as Completed</label>
+                                            {% if quarter_form.completed.errors %}
+                                            <div class="text-danger">
+                                                {{ quarter_form.completed.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3">Target Achievements</h5>
+
+                        {{ target_formset.management_form }}
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Target Description</th>
+                                        <th>Target Value</th>
+                                        <th>Achieved Value</th>
+                                        <th>Achievement Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for form in target_formset %}
+                                    <tr>
+                                        {{ form.id }}
+                                        <td>{{ form.instance.project.name }}</td>
+                                        <td>{{ form.instance.target_description }}</td>
+                                        <td>{{ form.instance.target_value }}</td>
+                                        <td>
+                                            {{ form.achieved_value|add_class:"form-control" }}
+                                            {% if form.achieved_value.errors %}
+                                            <div class="text-danger">
+                                                {{ form.achieved_value.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ form.achievement_notes|add_class:"form-control" }}
+                                            {% if form.achievement_notes.errors %}
+                                            <div class="text-danger">
+                                                {{ form.achievement_notes.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No targets set for this quarter. Please add targets before completing the quarter.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check-circle"></i> Complete Quarter
+                            </button>
+                            <a href="{% url 'quarter-detail' quarter.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

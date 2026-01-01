@@ -1,0 +1,73 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Update Sprint Metrics - {{ sprint.product.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Add Sprint Metrics for {{ sprint.product.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="alert alert-info">
+                            <p><strong>Note:</strong> All fields are optional. You can update these metrics at any time after creating a sprint.</p>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.total_sprint_days.id_for_label }}" class="form-label">Total Sprint Days</label>
+                                {{ form.total_sprint_days.errors }}
+                                {{ form.total_sprint_days }}
+                                <div class="form-text">Enter the total number of days in the sprint</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.total_planned_working_hours.id_for_label }}" class="form-label">Total Planned Working Hours</label>
+                                {{ form.total_planned_working_hours.errors }}
+                                {{ form.total_planned_working_hours }}
+                                <div class="form-text">Enter the total planned working hours</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.blocked_hours.id_for_label }}" class="form-label">Blocked Hours</label>
+                                {{ form.blocked_hours.errors }}
+                                {{ form.blocked_hours }}
+                                <div class="form-text">Enter the number of blocked hours</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.total_planned_test_cases.id_for_label }}" class="form-label">Total Planned Test Cases</label>
+                                {{ form.total_planned_test_cases.errors }}
+                                {{ form.total_planned_test_cases }}
+                                <div class="form-text">Enter the total number of planned test cases</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.total_test_cases_automated.id_for_label }}" class="form-label">Total Test Cases Automated</label>
+                                {{ form.total_test_cases_automated.errors }}
+                                {{ form.total_test_cases_automated }}
+                                <div class="form-text">Enter the total number of test cases automated</div>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- This column is intentionally left empty for balance -->
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'automation-sprint-detail' sprint.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Metrics</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

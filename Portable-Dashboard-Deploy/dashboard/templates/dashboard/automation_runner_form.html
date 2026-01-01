@@ -1,0 +1,37 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Automation Runner{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Automation Runner</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                            {{ form.name.errors }}
+                            <input type="text" class="form-control" id="{{ form.name.id_for_label }}" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.link.id_for_label }}" class="form-label">Link to Runner Board</label>
+                            {{ form.link.errors }}
+                            <input type="url" class="form-control" id="{{ form.link.id_for_label }}" name="{{ form.link.html_name }}" value="{{ form.link.value|default:'' }}" required>
+                            <div class="form-text">Please enter a valid URL (e.g., https://example.com/runner-board)</div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'automation-runner-list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

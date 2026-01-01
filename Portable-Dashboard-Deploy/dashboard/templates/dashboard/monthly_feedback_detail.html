@@ -1,0 +1,104 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Monthly Feedback Details | Track360{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="mb-3">Monthly Feedback Details</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'monthly-feedback-list' %}">Monthly Feedback</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    {% if can_view %}
+        <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Feedback for {{ feedback.resource.name }} - {{ feedback.month }}/{{ feedback.year }}</h5>
+                <div>
+                    {% if feedback.status == 'due' %}
+                        <a href="{% url 'monthly-feedback-update' feedback.pk %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'monthly-feedback-list' %}" class="btn btn-sm btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Resource Information</h6>
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="width: 30%">Name</th>
+                                <td>{{ feedback.resource.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Role</th>
+                                <td>{{ feedback.resource.role }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email</th>
+                                <td>{{ feedback.resource.email|default:"N/A" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Feedback Information</h6>
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="width: 30%">Month/Year</th>
+                                <td>{{ feedback.month }}/{{ feedback.year }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td>
+                                    {% if feedback.status == 'submitted' %}
+                                        <span class="badge bg-success">Submitted</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Feedback Due</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Submitted By</th>
+                                <td>{{ feedback.submitted_by.get_full_name|default:feedback.submitted_by.username }}</td>
+                            </tr>
+                            <tr>
+                                <th>Submitted On</th>
+                                <td>{{ feedback.submitted_at|date:"F d, Y H:i" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="text-muted">Feedback Content</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <p class="card-text">{{ feedback.feedback|linebreaks }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Access Denied</h4>
+            <p>You do not have permission to view this feedback.</p>
+            <hr>
+            <p class="mb-0">Please contact your administrator if you believe this is an error.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

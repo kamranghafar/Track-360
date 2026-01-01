@@ -1,0 +1,29 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Delete Product Meeting: {{ meeting.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Delete Product Meeting: {{ meeting.title }}</h1>
+        <a href="{% url 'weekly-product-meeting-list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> 
+                Are you sure you want to delete the product meeting "{{ meeting.title }}" from {{ meeting.meeting_date|date:"M d, Y" }}?
+                This will also delete all product updates associated with this meeting.
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                <a href="{% url 'weekly-product-meeting-detail' meeting.id %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
