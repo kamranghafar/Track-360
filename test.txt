@@ -1,3 +1,0 @@
-This is a test file.
-Line with get_leave_type_display().
-Another line.

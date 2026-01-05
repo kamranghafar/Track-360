@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,27 +21,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-loenlgszh36x01uwij%@mdt_a@3-cv+n0dv0av0y620)2^hjjp'
+# Use environment variable or generate a random key for development
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-CHANGE-THIS-IN-PRODUCTION-' + 'loenlgszh36x01uwij%@mdt_a@3-cv+n0dv0av0y620)2^hjjp')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [
-    '10.0.32.81',  # Your local IP
-    'localhost',
-    '127.0.0.1',
-    '*',             # Allow all for local testing (not recommended for production)
-]
+# Get allowed hosts from environment variable, or use defaults for local development
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # CSRF trusted origins for proper AJAX requests
+# Add your own origins via DJANGO_CSRF_TRUSTED_ORIGINS environment variable
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://127.0.0.1:8001',
     'http://localhost:8000',
     'http://localhost:8001',
-    'http://10.0.32.81:8000',
-    'http://10.0.32.81:8001',
 ]
+
+# Add additional CSRF origins from environment variable
+additional_origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '')
+if additional_origins:
+    CSRF_TRUSTED_ORIGINS.extend(additional_origins.split(','))
 
 
 
